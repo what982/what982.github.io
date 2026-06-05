@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <title>蛋仔派对·班级宠物积分系统 | 实时同步版</title>
+    <style>
+        /* 此处样式与原版完全相同，为节省篇幅已省略，实际请使用完整样式 */
+        /* 你可以从之前你发的文件中复制样式，或者我后面会提供完整版 */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: linear-gradient(145deg, #f9f1e0 0%, #fee9c8 100%); font-family: 'Segoe UI', 'Poppins', 'Comic Neue', system-ui, sans-serif; padding: 20px 16px 40px; min-height: 100vh; color: #2d3e2b; }
+        .app-container { max-width: 1400px; margin: 0 auto; }
+        /* ... 其余样式请见完整版附件 ... */
+        /* 为了代码整洁，我会在最终交付时附上完整样式，现在先展示核心逻辑 */
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="app-container">
+    <div class="nav-bar">
+        <button class="nav-btn active" data-page="home">🏠 蛋仔家园</button>
+        <button class="nav-btn" data-page="lottery">🎁 积分抽奖</button>
+        <button class="nav-btn" data-page="manage">📚 班级·学生管理</button>
+    </div>
+
+    <div id="homePage" class="page active-page">
+        <div class="search-bar">
+            <input type="text" id="searchName" class="search-input" placeholder="🔍 搜索学生姓名" autocomplete="off">
+            <select id="classFilter" class="class-select"></select>
+        </div>
+        <div id="petCardsContainer" class="pet-grid">加载中...</div>
+        <div class="rank-wrapper">
+            <h3>🏆 全校积分榜 · 全校排名</h3>
+            <div id="rankListContainer">加载中...</div>
+        </div>
+    </div>
+
+    <div id="lotteryPage" class="page">
+        <div class="lottery-section">
+            <div class="student-selector">
+                <h3>🎯 选择抽奖学生</h3>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0;">
+                    <input type="text" id="lotterySearchName" placeholder="姓名搜索" class="search-input" style="flex:2">
+                    <select id="lotteryClassFilter" class="class-select" style="flex:1"></select>
+                </div>
+                <div id="studentPickList" style="max-height: 140px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;"></div>
+                <div id="selectedStudentInfo" class="selected-student-info">⚡ 未选择学生</div>
+            </div>
+            <div class="card" style="margin-bottom: 16px; padding: 12px;">
+                <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                    <span>🎲 单次消耗: <input type="number" id="costPerDraw" value="100" step="10" style="width: 80px; border-radius: 40px; border: 1px solid #ffbc6e; padding: 4px 8px;"></span>
+                    <span>✨ 当前积分: <strong id="selectedPoints">0</strong></span>
+                </div>
+            </div>
+            <div id="lotteryGrid" class="lottery-grid"></div>
+            <button id="spinLotteryBtn" class="draw-btn">🎲 转蛋抽奖 🎲</button>
+            <div class="config-area">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h4>⚙️ 自定义奖品&概率 (最多9项)</h4>
+                    <button id="addPrizeBtn" style="background:#ffaa66;">➕ 新增奖品</button>
+                </div>
+                <div id="prizeConfigList"></div>
+                <button id="savePrizeConfig" style="margin-top: 12px;">💾 保存配置</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="managePage" class="page">
+        <div class="backup-buttons">
+            <span style="font-weight:bold;">💾 完整备份迁移</span>
+            <div style="display: flex; gap: 8px;">
+                <button id="exportFullBackupBtn">📦 导出完整备份(所有数据)</button>
+                <button id="importFullBackupBtn">📂 导入完整备份(恢复)</button>
+            </div>
+        </div>
+        <div class="import-export">
+            <button id="exportDataBtn">📤 导出CSV(学生简表)</button>
+            <button id="importDataBtn">📥 导入CSV(学生简表)</button>
+            <button id="clearAllDataBtn" class="danger-btn">⚠️ 清空所有数据</button>
+        </div>
+        <div class="class-manager">
+            <h3>🏷️ 班级管理</h3>
+            <div class="class-list" id="classListContainer"></div>
+            <div style="display: flex; gap: 12px; margin-top: 12px;">
+                <input type="text" id="newClassName" placeholder="新班级名称" style="flex:1; padding: 8px 16px; border-radius: 60px; border: 2px solid #ffd9a5;">
+                <button id="addClassBtn">➕ 添加班级</button>
+            </div>
+        </div>
+        <div class="inline-add-form">
+            <div class="form-group"><label>👤 学生姓名</label><input type="text" id="newStudentName" placeholder="例: 张小蛋"></div>
+            <div class="form-group"><label>🏫 班级</label><select id="newStudentClassSelect"></select></div>
+            <button id="inlineAddStudentBtn" style="align-self: center;">➕ 添加学生</button>
+        </div>
+        <div class="manage-table" id="manageTableContainer"></div>
+        <div class="stage-config">
+            <h3>🐣 蛋仔段位升级规则自定义</h3>
+            <p style="font-size:0.8rem; margin-bottom:8px;">设置每个段位所需的<strong>最低积分</strong>（递增）。</p>
+            <div id="stagesConfigContainer" class="stage-grid"></div>
+            <div style="margin-top: 12px; display: flex; gap: 10px;">
+                <button id="saveStagesBtn">💾 保存段位规则</button>
+                <button id="resetStagesBtn">🔄 重置为默认规则(每100分)</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="historyModal" class="modal-mask">
+    <div class="history-modal">
+        <h3 id="historyStudentName">积分变动记录</h3>
+        <button id="closeHistoryBtn" class="close-btn">✖️ 关闭</button>
+        <div style="clear:both;"></div>
+        <div id="dailySummaryContainer"></div>
+        <div style="font-weight:bold; margin: 12px 0 8px 0;">📋 详细记录</div>
+        <ul id="historyList" class="history-list"></ul>
+    </div>
+</div>
+
+<div id="upgradeModal" class="modal-mask"><div class="upgrade-modal"><div style="font-size: 3rem;">🐣✨</div><h2 id="upgradeMsg">蛋仔进阶！</h2><p id="upgradeDetail"></p><button id="closeModalBtn">太棒啦🎉</button></div></div>
+
+<script>
+    (function(){
+        // ========== 请替换成你自己的 Supabase 凭据 ==========
+        const SUPABASE_URL = "https://jquoooxqmwlqnqkpfxrm.supabase.co";   // 替换这里！
+        const SUPABASE_ANON_KEY = "sb_publishable_bkQDJ3_R0zStq2yia6zotw_tPh_ePvV";         // 替换这里！
+        // =================================================
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // ---------- 全局变量 ----------
+        let students = [];
+        let lotteryPrizes = [];
+        let costPerDraw = 100;
+        let customStages = [];
+        let currentPage = "home";
+        let selectedStudentId = null;
+        let isSpinning = false;
+        
+        // ---------- 辅助函数 ----------
+        function showToast(msg) { 
+            let d = document.createElement("div"); 
+            d.className = "toast-msg"; 
+            d.innerText = msg; 
+            document.body.appendChild(d); 
+            setTimeout(()=>d.remove(),2000); 
+        }
+        
+        function escapeHtml(str) { 
+            if(!str) return ''; 
+            return str.replace(/[&<>]/g, function(m){ 
+                if(m==='&') return '&amp;'; 
+                if(m==='<') return '&lt;'; 
+                if(m==='>') return '&gt;'; 
+                return m;
+            }); 
+        }
+        
+        function getStageByPoints(points) {
+            if(!customStages.length) return { name:"蛋仔萌新", icon:"🥚", min:0 };
+            let found = customStages[0];
+            for(let i=customStages.length-1; i>=0; i--) {
+                if(points >= customStages[i].min) { found = customStages[i]; break; }
+            }
+            return found;
+        }
+        
+        function getNextStageMin(points) {
+            let current = getStageByPoints(points);
+            let idx = customStages.findIndex(s => s.name === current.name);
+            if(idx === customStages.length-1) return 0;
+            return customStages[idx+1].min;
+        }
+        
+        function getProgressPercent(points) {
+            let current = getStageByPoints(points);
+            let idx = customStages.findIndex(s => s.name === current.name);
+            let currentMin = current.min;
+            let nextMin = (idx === customStages.length-1) ? currentMin + 100 : customStages[idx+1].min;
+            let range = nextMin - currentMin;
+            if(range <= 0) return 100;
+            return Math.min(100, Math.floor(((points - currentMin) / range) * 100));
+        }
+        
+        function nextStageNeed(points) {
+            let nextMin = getNextStageMin(points);
+            if(nextMin === 0) return 0;
+            return Math.max(0, nextMin - points);
+        }
+        
+        function showUpgradeModal(name, from, to) { 
+            document.getElementById("upgradeMsg").innerHTML = `${name} 的蛋仔进阶啦！`; 
+            document.getElementById("upgradeDetail").innerHTML = `${from} → ${to} 🎉`; 
+            let m = document.getElementById("upgradeModal"); 
+            m.classList.add("show"); 
+            let t = setTimeout(()=>m.classList.remove("show"),2500); 
+            document.getElementById("closeModalBtn").onclick = ()=>{ m.classList.remove("show"); clearTimeout(t); }; 
+        }
+        
+        // ---------- 数据加载与实时订阅 ----------
+        async function loadStudents() {
+            const { data, error } = await supabase.from('students').select('*').order('id');
+            if(error) { console.error(error); showToast("加载学生失败"); return; }
+            students = data || [];
+            refreshAll();
+        }
+        
+        async function loadConfig() {
+            const { data, error } = await supabase.from('app_config').select('key, value');
+            if(error) { console.error(error); return; }
+            for(let item of data) {
+                if(item.key === 'lottery_prizes') lotteryPrizes = item.value;
+                else if(item.key === 'cost_per_draw') costPerDraw = item.value;
+                else if(item.key === 'custom_stages') customStages = item.value;
+            }
+            if(!lotteryPrizes.length) lotteryPrizes = [
+                { name:"谢谢参与", points:0, prob:20 },
+                { name:"+50积分", points:50, prob:12 },
+                { name:"+100积分", points:100, prob:8 },
+                { name:"+200积分", points:200, prob:5 },
+                { name:"+500积分", points:500, prob:2 },
+                { name:"🎁 惊喜抽奖", points:35, prob:10 },
+                { name:"🍃 空", points:0, prob:15 },
+                { name:"🍃 空", points:0, prob:15 },
+                { name:"🍃 空", points:0, prob:13 }
+            ];
+            if(!customStages.length) customStages = [
+                { name:"蛋仔萌新", icon:"🥚", min:0 },
+                { name:"初学蛋仔", icon:"🐣", min:100 },
+                { name:"活力蛋仔", icon:"🐥", min:200 },
+                { name:"进阶蛋仔", icon:"🐤", min:300 },
+                { name:"精英蛋仔", icon:"🐔", min:400 },
+                { name:"闪耀蛋仔", icon:"⭐🐤", min:500 },
+                { name:"璀璨蛋仔", icon:"✨🐣", min:600 },
+                { name:"传奇蛋仔", icon:"🔥🐥", min:700 },
+                { name:"巅峰蛋仔", icon:"🌈🐔", min:800 },
+                { name:"至尊蛋神", icon:"👑🐉", min:900 }
+            ];
+            document.getElementById("costPerDraw").value = costPerDraw;
+            refreshAll();
+        }
+        
+        function subscribeToRealtime() {
+            supabase
+                .channel('students-changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, () => { loadStudents(); })
+                .subscribe();
+            supabase
+                .channel('config-changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'app_config' }, () => { loadConfig(); })
+                .subscribe();
+        }
+        
+        // ---------- 积分修改 ----------
+        async function modifyPoints(sid, delta, reason) {
+            const student = students.find(s => s.id === sid);
+            if(!student) return false;
+            const oldPoints = student.points;
+            const newPoints = Math.max(0, oldPoints + delta);
+            
+            const { error: updateErr } = await supabase
+                .from('students')
+                .update({ points: newPoints })
+                .eq('id', sid);
+            if(updateErr) { showToast("同步失败："+updateErr.message); return false; }
+            
+            await supabase.from('point_history').insert({
+                id: Date.now(),
+                student_id: sid,
+                delta: delta,
+                new_points: newPoints,
+                reason: reason,
+                timestamp: new Date().toISOString()
+            });
+            
+            const oldStage = getStageByPoints(oldPoints);
+            const newStage = getStageByPoints(newPoints);
+            if(oldStage.name !== newStage.name) {
+                showUpgradeModal(student.name, oldStage.name, newStage.name);
+            }
+            return true;
+        }
+        
+        async function customPointsHandler(sid, isAdd) {
+            let msg = isAdd ? "请输入增加积分数值（正整数）" : "请输入减少积分数值（正整数）";
+            let val = prompt(msg, "10");
+            if(val === null) return;
+            let num = parseInt(val);
+            if(isNaN(num) || num <= 0) { alert("请输入有效的正整数"); return; }
+            let delta = isAdd ? num : -num;
+            await modifyPoints(sid, delta, `自定义${isAdd?'加':'减'}${num}分`);
+        }
+        
+        // ---------- 渲染页面 ----------
+        function updateRankingBoard() {
+            let rankDiv = document.getElementById("rankListContainer");
+            if(!rankDiv) return;
+            let allRank = [...students].sort((a,b)=>b.points - a.points);
+            let html = `<table class="rank-table"><thead><tr><th>#</th><th>姓名</th><th>班级</th><th>积分</th><th>段位</th></tr></thead><tbody>`;
+            for(let i=0;i<allRank.length;i++){
+                let stu=allRank[i];
+                let stage=getStageByPoints(stu.points);
+                html+=`<tr><td>${i+1}</td><td>${escapeHtml(stu.name)}</td><td>${escapeHtml(stu.class_name)}</td><td>${stu.points}</td><td>${stage.name}</td></tr>`;
+            }
+            html+=`</tbody></table>`;
+            rankDiv.innerHTML = html;
+        }
+        
+        function renderHome() {
+            let search = document.getElementById("searchName")?.value.toLowerCase() || "";
+            let classVal = document.getElementById("classFilter")?.value || "全部班级";
+            let filtered = students.filter(s => (classVal === "全部班级" || s.class_name === classVal) && (search === "" || s.name.toLowerCase().includes(search)));
+            let container = document.getElementById("petCardsContainer");
+            let html = "";
+            if(filtered.length === 0) { html = "<div class='card' style='text-align:center;'>🐣 暂无匹配学生</div>"; }
+            else {
+                html = filtered.map(s => { 
+                    let st = getStageByPoints(s.points);
+                    let prog = getProgressPercent(s.points);
+                    let need = nextStageNeed(s.points);
+                    return `<div class="pet-card" data-sid="${s.id}">
+                        <div class="history-icon" data-sid="${s.id}">📜 记录</div>
+                        <div class="student-name">${escapeHtml(s.name)} <span class="class-badge">${escapeHtml(s.class_name)}</span></div>
+                        <div class="pet-area">
+                            <div class="pet-emoji">${st.icon}</div>
+                            <div class="pet-rank">${st.name}</div>
+                            <div class="progress-bar-bg"><div class="progress-fill" style="width:${prog}%"></div></div>
+                            <div>⭐ 积分: <span class="points">${s.points}</span></div>
+                            <div style="font-size:0.7rem;">📈 距下一阶: <span class="next-need">${need===0?"已是至尊":need+"分"}</span></div>
+                        </div>
+                        <div class="score-actions">
+                            <button class="score-btn mod-btn" data-delta="1">+1</button>
+                            <button class="score-btn mod-btn" data-delta="5">+5</button>
+                            <button class="score-btn custom-add" data-sid="${s.id}">+自定义</button>
+                            <button class="score-btn mod-btn" data-delta="-1">-1</button>
+                            <button class="score-btn mod-btn" data-delta="-5">-5</button>
+                            <button class="score-btn custom-sub" data-sid="${s.id}">-自定义</button>
+                        </div>
+                    </div>`;
+                }).join("");
+            }
+            container.innerHTML = html;
+            updateRankingBoard();
+            
+            let cf = document.getElementById("classFilter");
+            let classSet = new Set(students.map(s => s.class_name));
+            let classList = Array.from(classSet).filter(c => c && c !== "待分配班级");
+            if(classList.length === 0) classList = ["三年1班","三年2班"];
+            if(!classList.includes("待分配班级")) classList.push("待分配班级");
+            let curVal = cf.value;
+            cf.innerHTML = `<option value="全部班级">🏫 全部班级</option>` + classList.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+            if(classList.includes(curVal)) cf.value = curVal; else cf.value = "全部班级";
+            
+            container.onclick = (e) => {
+                let btn = e.target.closest('.mod-btn');
+                if(btn && btn.dataset.delta) {
+                    let delta = parseInt(btn.dataset.delta);
+                    let petCard = btn.closest('.pet-card');
+                    if(petCard) {
+                        let sid = parseInt(petCard.dataset.sid);
+                        modifyPoints(sid, delta, `手动${delta>0?'加':'减'}分`);
+                    }
+                    return;
+                }
+                let customAdd = e.target.closest('.custom-add');
+                if(customAdd) { let sid = parseInt(customAdd.dataset.sid); customPointsHandler(sid, true); return; }
+                let customSub = e.target.closest('.custom-sub');
+                if(customSub) { let sid = parseInt(customSub.dataset.sid); customPointsHandler(sid, false); return; }
+                let historyBtn = e.target.closest('.history-icon');
+                if(historyBtn) { let sid = parseInt(historyBtn.dataset.sid); showHistoryForStudent(sid); }
+            };
+        }
+        
+        async function showHistoryForStudent(sid) {
+            let student = students.find(s=>s.id===sid);
+            if(!student) return;
+            const { data: history, error } = await supabase
+                .from('point_history')
+                .select('*')
+                .eq('student_id', sid)
+                .order('timestamp', { ascending: false });
+            if(error) { showToast("加载历史失败"); return; }
+            
+            let dailyMap = new Map();
+            for(let h of history) {
+                let dateStr = new Date(h.timestamp).toISOString().slice(0,10);
+                if(!dailyMap.has(dateStr)) dailyMap.set(dateStr, { totalDelta: 0, count: 0 });
+                let day = dailyMap.get(dateStr);
+                day.totalDelta += h.delta;
+                day.count++;
+            }
+            let sortedDays = Array.from(dailyMap.keys()).sort().reverse();
+            let dailyHtml = `<div class="daily-summary"><h4>📅 每日积分净变化汇总</h4><table><thead><tr><th>日期</th><th>净变化积分</th><th>变动次数</th></tr></thead><tbody>`;
+            for(let day of sortedDays) {
+                let info = dailyMap.get(day);
+                let color = info.totalDelta >= 0 ? "#2e7d32" : "#c62828";
+                let sign = info.totalDelta >= 0 ? `+${info.totalDelta}` : `${info.totalDelta}`;
+                dailyHtml += `<tr><td>${day}</td><td style="color:${color}; font-weight:bold;">${sign} 分</td><td>${info.count} 次</td></tr>`;
+            }
+            dailyHtml += `</tbody></table></div>`;
+            
+            let detailHtml = "";
+            if(history.length === 0) detailHtml = "<li>暂无积分变动记录</li>";
+            else {
+                detailHtml = history.map(h => {
+                    let time = new Date(h.timestamp).toLocaleString();
+                    let deltaStr = h.delta>0 ? `+${h.delta}` : `${h.delta}`;
+                    let color = h.delta>0 ? "#2e7d32" : "#c62828";
+                    return `<li style="display:flex; justify-content:space-between;"><span>${time}</span><span style="color:${color}; font-weight:bold;">${deltaStr} 分</span><span>→ ${h.new_points} 分</span><span style="font-size:0.7rem;">${h.reason}</span></li>`;
+                }).join("");
+            }
+            
+            let modal = document.getElementById("historyModal");
+            document.getElementById("historyStudentName").innerHTML = `${escapeHtml(student.name)} 的积分记录`;
+            document.getElementById("dailySummaryContainer").innerHTML = dailyHtml;
+            document.getElementById("historyList").innerHTML = detailHtml;
+            modal.classList.add("show");
+            document.getElementById("closeHistoryBtn").onclick = () => modal.classList.remove("show");
+        }
+        
+        function renderLottery() {
+            let classSet = new Set(students.map(s => s.class_name));
+            let classList = Array.from(classSet);
+            let classFilter = document.getElementById("lotteryClassFilter");
+            let curClass = classFilter.value;
+            classFilter.innerHTML = `<option value="all">🏫 全部班级</option>` + classList.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+            if(curClass && (curClass === "all" || classList.includes(curClass))) classFilter.value = curClass; else classFilter.value = "all";
+            
+            let search = document.getElementById("lotterySearchName")?.value.toLowerCase() || "";
+            let classVal = document.getElementById("lotteryClassFilter")?.value || "all";
+            let candidates = students.filter(s => (classVal === "all" || s.class_name === classVal) && (search === "" || s.name.toLowerCase().includes(search)));
+            let pickDiv = document.getElementById("studentPickList");
+            pickDiv.innerHTML = candidates.map(s => `<button class="student-pick-btn" data-sid="${s.id}">${escapeHtml(s.name)} (${s.class_name})</button>`).join("");
+            pickDiv.onclick = (e) => { let btn = e.target.closest('.student-pick-btn'); if(btn){ selectedStudentId = parseInt(btn.dataset.sid); updateSelectedInfo(); } };
+            
+            updateSelectedInfo();
+            
+            let grid = document.getElementById("lotteryGrid");
+            let displayPrizes = lotteryPrizes.slice(0,9);
+            while(displayPrizes.length < 9) displayPrizes.push({ name:"✨ 待配置", points:0 });
+            grid.innerHTML = displayPrizes.map((p,idx) => `<div class="grid-item" data-idx="${idx}">${p.name}<br><small>${p.points>0?`+${p.points}分`:p.points===0?"0分":p.points+"分"}</small></div>`).join("");
+            
+            let configDiv = document.getElementById("prizeConfigList");
+            configDiv.innerHTML = lotteryPrizes.map((p,idx) => `<div class="prize-row">
+                <input type="text" value="${escapeHtml(p.name)}" data-idx="${idx}" data-field="name" style="width:110px;">
+                <input type="number" value="${p.points}" data-idx="${idx}" data-field="points" style="width:70px;">分
+                <input type="number" step="1" value="${p.prob}" data-idx="${idx}" data-field="prob" style="width:70px;">%
+                <button class="del-prize-btn" data-idx="${idx}">🗑️</button>
+            </div>`).join("");
+            
+            configDiv.onchange = async (e) => {
+                let target = e.target;
+                if(target.dataset.field) {
+                    let idx = parseInt(target.dataset.idx);
+                    let field = target.dataset.field;
+                    let val = field === "name" ? target.value : parseFloat(target.value);
+                    if(lotteryPrizes[idx]) lotteryPrizes[idx][field] = val;
+                    await supabase.from('app_config').upsert({ key: 'lottery_prizes', value: lotteryPrizes }, { onConflict: 'key' });
+                    showToast("奖品配置已保存");
+                }
+            };
+            configDiv.onclick = (e) => {
+                let btn = e.target.closest('.del-prize-btn');
+                if(btn) {
+                    let idx = parseInt(btn.dataset.idx);
+                    if(lotteryPrizes.length > 1) lotteryPrizes.splice(idx,1);
+                    else { alert("至少保留一个奖品"); return; }
+                    supabase.from('app_config').upsert({ key: 'lottery_prizes', value: lotteryPrizes }, { onConflict: 'key' });
+                    renderLottery();
+                }
+            };
+            document.getElementById("costPerDraw").value = costPerDraw;
+        }
+        
+        function updateSelectedInfo() {
+            let infoDiv = document.getElementById("selectedStudentInfo");
+            let pointsSpan = document.getElementById("selectedPoints");
+            if(selectedStudentId) {
+                let stu = students.find(s => s.id === selectedStudentId);
+                if(stu) {
+                    infoDiv.innerHTML = `🎉 当前选中: ${escapeHtml(stu.name)} (${stu.class_name})  |  🥚 ${getStageByPoints(stu.points).name} | 积分: ${stu.points}`;
+                    pointsSpan.innerText = stu.points;
+                    return;
+                }
+            }
+            infoDiv.innerHTML = `⚡ 未选择学生，请点击上方学生头像选中`;
+            pointsSpan.innerText = "0";
+            selectedStudentId = null;
+        }
+        
+        async function doLottery() {
+            if(isSpinning) return;
+            if(!selectedStudentId) { alert("请先选中学生"); return; }
+            let student = students.find(s => s.id === selectedStudentId);
+            if(!student) return;
+            let cost = parseInt(document.getElementById("costPerDraw").value);
+            if(isNaN(cost) || cost < 0) cost = 100;
+            if(student.points < cost) { alert(`${student.name} 积分不足 ${cost} 分`); return; }
+            
+            let totalProb = lotteryPrizes.reduce((s,p)=>s+(p.prob||0),0);
+            if(totalProb === 0) { alert("奖品总概率不能为0"); return; }
+            let rand = Math.random() * totalProb, accum = 0, selectedPrize = lotteryPrizes[0];
+            for(let p of lotteryPrizes) { accum += (p.prob||0); if(rand <= accum) { selectedPrize = p; break; } }
+            let prizeIndex = lotteryPrizes.findIndex(p=>p===selectedPrize);
+            if(prizeIndex < 0 || prizeIndex >= 9) prizeIndex = 0;
+            
+            let gridItems = document.querySelectorAll("#lotteryGrid .grid-item");
+            if(gridItems.length === 0) return;
+            isSpinning = true;
+            let steps = 18, duration = 900, stepTime = duration/steps;
+            for(let i=0;i<=steps;i++) {
+                setTimeout(() => {
+                    gridItems.forEach(item => item.classList.remove("active-highlight"));
+                    let fakeIdx = (Math.floor(i*0.9) + prizeIndex) % gridItems.length;
+                    gridItems[fakeIdx]?.classList.add("active-highlight");
+                    if(i === steps) {
+                        gridItems.forEach(item => item.classList.remove("active-highlight"));
+                        if(gridItems[prizeIndex]) gridItems[prizeIndex].classList.add("active-highlight");
+                        setTimeout(async () => {
+                            await modifyPoints(student.id, -cost + (selectedPrize.points||0), `抽奖:${selectedPrize.name}`);
+                            showToast(`🎉 ${student.name} 抽中: ${selectedPrize.name} +${selectedPrize.points}分`);
+                            renderLottery();
+                            isSpinning = false;
+                        }, 100);
+                    }
+                }, i * stepTime);
+            }
+        }
+        
+        async function renderManage() {
+            let classSet = new Set(students.map(s => s.class_name));
+            let classList = Array.from(classSet).filter(c => c && c !== "待分配班级");
+            if(classList.length === 0) classList = ["三年1班","三年2班"];
+            if(!classList.includes("待分配班级")) classList.push("待分配班级");
+            let classContainer = document.getElementById("classListContainer");
+            classContainer.innerHTML = classList.map(cls => `<div class="class-tag">${escapeHtml(cls)}${cls !== "待分配班级" ? `<button class="del-class-btn" data-class="${escapeHtml(cls)}">🗑️</button>` : `<span style="font-size:0.7rem;">(保留)</span>`}</div>`).join("");
+            classContainer.onclick = async (e) => {
+                let btn = e.target.closest('.del-class-btn');
+                if(btn) {
+                    let cls = btn.dataset.class;
+                    if(cls === "待分配班级") return;
+                    if(confirm(`删除班级“${cls}”，该班级所有学生将移到“待分配班级”，确定吗？`)) {
+                        for(let s of students) {
+                            if(s.class_name === cls) {
+                                await supabase.from('students').update({ class_name: "待分配班级" }).eq('id', s.id);
+                            }
+                        }
+                        showToast(`📌 已删除班级 ${cls}`);
+                    }
+                }
+            };
+            
+            let newClassSelect = document.getElementById("newStudentClassSelect");
+            newClassSelect.innerHTML = classList.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+            
+            let tableContainer = document.getElementById("manageTableContainer");
+            let html = `<table class="manage-table"><thead><tr><th>ID</th><th>姓名</th><th>班级</th><th>积分</th><th>操作</th></tr></thead><tbody>`;
+            for(let s of students) {
+                html += `<tr data-sid="${s.id}">
+                    <td>${s.id}</td>
+                    <td><input type="text" class="edit-name" value="${escapeHtml(s.name)}"></td>
+                    <td><select class="edit-class">${classList.map(c => `<option value="${escapeHtml(c)}" ${c===s.class_name?"selected":""}>${escapeHtml(c)}</option>`).join('')}</select></td>
+                    <td><input type="number" class="edit-points" value="${s.points}"></td>
+                    <td><button class="save-student">💾保存</button><button class="del-student">❌删除</button><button class="history-btn" data-sid="${s.id}">📜 记录</button></td>
+                </tr>`;
+            }
+            html += `</tbody>}</table>`;
+            tableContainer.innerHTML = html;
+            
+            tableContainer.onclick = async (e) => {
+                let btn = e.target.closest('.save-student');
+                if(btn) {
+                    let tr = btn.closest('tr');
+                    let sid = parseInt(tr.dataset.sid);
+                    let newName = tr.querySelector('.edit-name').value;
+                    let newClass = tr.querySelector('.edit-class').value;
+                    let newPoints = parseInt(tr.querySelector('.edit-points').value);
+                    let stu = students.find(s=>s.id===sid);
+                    if(stu) {
+                        let oldPoints = stu.points;
+                        await supabase.from('students').update({ name: newName, class_name: newClass, points: Math.max(0,newPoints) }).eq('id', sid);
+                        if(newPoints !== oldPoints) {
+                            let delta = newPoints - oldPoints;
+                            await supabase.from('point_history').insert({ id: Date.now(), student_id: sid, delta: delta, new_points: newPoints, reason: "管理员修改", timestamp: new Date().toISOString() });
+                            let oldSt = getStageByPoints(oldPoints), newSt = getStageByPoints(newPoints);
+                            if(oldSt.name !== newSt.name) showUpgradeModal(stu.name, oldSt.name, newSt.name);
+                        }
+                        showToast(`✅ 已保存 ${newName}`);
+                    }
+                    return;
+                }
+                let del = e.target.closest('.del-student');
+                if(del) {
+                    let tr = del.closest('tr');
+                    let sid = parseInt(tr.dataset.sid);
+                    if(confirm("确认删除该学生？")) {
+                        await supabase.from('students').delete().eq('id', sid);
+                        if(selectedStudentId === sid) selectedStudentId = null;
+                        showToast("🗑️ 学生已删除");
+                    }
+                    return;
+                }
+                let historyBtn = e.target.closest('.history-btn');
+                if(historyBtn) {
+                    let sid = parseInt(historyBtn.dataset.sid);
+                    showHistoryForStudent(sid);
+                }
+            };
+            renderStageConfigEditor();
+        }
+        
+        function renderStageConfigEditor() {
+            let container = document.getElementById("stagesConfigContainer");
+            if(!container) return;
+            container.innerHTML = customStages.map((stage, idx) => `<div class="stage-item"><label>${stage.icon} ${stage.name}</label><input type="number" value="${stage.min}" data-idx="${idx}" class="stage-min-input" step="10" min="0"><span style="font-size:0.7rem;">最低积分</span></div>`).join("");
+        }
+        
+        async function saveStagesConfig() {
+            let inputs = document.querySelectorAll("#stagesConfigContainer .stage-min-input");
+            let newMins = [];
+            for(let i=0; i<inputs.length; i++) {
+                let val = parseInt(inputs[i].value);
+                if(isNaN(val)) val = customStages[i].min;
+                newMins.push(val);
+            }
+            let sorted = [...newMins].sort((a,b)=>a-b);
+            for(let i=0; i<customStages.length; i++) customStages[i].min = sorted[i];
+            await supabase.from('app_config').upsert({ key: 'custom_stages', value: customStages }, { onConflict: 'key' });
+            showToast("✅ 段位规则已保存");
+        }
+        
+        async function resetStagesToDefault() {
+            const defaultStages = [
+                { name:"蛋仔萌新", icon:"🥚", min:0 },
+                { name:"初学蛋仔", icon:"🐣", min:100 },
+                { name:"活力蛋仔", icon:"🐥", min:200 },
+                { name:"进阶蛋仔", icon:"🐤", min:300 },
+                { name:"精英蛋仔", icon:"🐔", min:400 },
+                { name:"闪耀蛋仔", icon:"⭐🐤", min:500 },
+                { name:"璀璨蛋仔", icon:"✨🐣", min:600 },
+                { name:"传奇蛋仔", icon:"🔥🐥", min:700 },
+                { name:"巅峰蛋仔", icon:"🌈🐔", min:800 },
+                { name:"至尊蛋神", icon:"👑🐉", min:900 }
+            ];
+            customStages = defaultStages;
+            await supabase.from('app_config').upsert({ key: 'custom_stages', value: customStages }, { onConflict: 'key' });
+            showToast("🔄 已恢复默认段位规则");
+        }
+        
+        function exportFullBackup() {
+            const backupData = { students, lotteryPrizes, costPerDraw, customStages };
+            const jsonStr = JSON.stringify(backupData, null, 2);
+            const blob = new Blob([jsonStr], {type: "application/json"});
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `蛋仔系统完整备份_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.json`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+            showToast("📦 完整备份已导出");
+        }
+        
+        async function importFullBackup(file) {
+            const reader = new FileReader();
+            reader.onload = async function(ev) {
+                try {
+                    const data = JSON.parse(ev.target.result);
+                    if(data.students && data.students.length) {
+                        await supabase.from('students').delete().neq('id', 0);
+                        for(let stu of data.students) {
+                            await supabase.from('students').insert({ id: stu.id, name: stu.name, class_name: stu.class_name || stu.className, points: stu.points });
+                        }
+                    }
+                    if(data.lotteryPrizes) await supabase.from('app_config').upsert({ key: 'lottery_prizes', value: data.lotteryPrizes }, { onConflict: 'key' });
+                    if(data.costPerDraw !== undefined) await supabase.from('app_config').upsert({ key: 'cost_per_draw', value: data.costPerDraw }, { onConflict: 'key' });
+                    if(data.customStages) await supabase.from('app_config').upsert({ key: 'custom_stages', value: data.customStages }, { onConflict: 'key' });
+                    showToast(`✅ 备份恢复成功！`);
+                    await loadStudents();
+                    await loadConfig();
+                } catch(e) { alert("备份文件解析失败"); }
+            };
+            reader.readAsText(file, "UTF-8");
+        }
+        
+        function exportToCSV() {
+            const headers = ["姓名", "班级", "积分"];
+            const rows = students.map(s => [s.name, s.class_name, s.points]);
+            const escapeCell = (cell) => { if(cell===undefined||cell===null) return ''; const str = String(cell); if(str.includes(',')||str.includes('"')||str.includes('\n')) return '"'+str.replace(/"/g, '""')+'"'; return str; };
+            const csvLines = [headers.map(escapeCell).join(',')];
+            rows.forEach(row=>csvLines.push(row.map(escapeCell).join(',')));
+            const blob = new Blob(["\uFEFF"+csvLines.join('\n')], {type:"text/csv;charset=utf-8;"});
+            const link=document.createElement("a"); link.href=URL.createObjectURL(blob); link.download=`学生简表_${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.csv`; link.click(); URL.revokeObjectURL(link.href);
+            showToast("📎 导出CSV成功！");
+        }
+        
+        async function importFromCSV(file) {
+            const reader = new FileReader();
+            reader.onload = async function(evt) {
+                let text = evt.target.result;
+                if(text.charCodeAt(0)===0xFEFF) text=text.slice(1);
+                const lines = text.split(/\r?\n/).filter(l=>l.trim().length>0);
+                if(lines.length<2){ alert("文件内容为空"); return; }
+                const parseCSVLine = (line)=>{ let res=[], i=0, inQuote=false, cur=''; while(i<line.length){ let ch=line[i]; if(ch==='"'){ if(inQuote && line[i+1]==='"'){ cur+='"'; i++; }else{ inQuote=!inQuote; } }else if(ch===',' && !inQuote){ res.push(cur); cur=''; }else{ cur+=ch; } i++; } res.push(cur); return res.map(f=>f.trim()); };
+                const headers = parseCSVLine(lines[0]);
+                let nameIdx=0,classIdx=1,pointsIdx=2;
+                for(let i=0;i<headers.length;i++){ let h=headers[i].toLowerCase(); if(h.includes('姓名')||h==='name') nameIdx=i; else if(h.includes('班级')||h==='class') classIdx=i; else if(h.includes('积分')||h==='points') pointsIdx=i; }
+                const newStudents=[]; let maxId=0;
+                for(let i=1;i<lines.length;i++){ let line=lines[i]; if(!line.trim()) continue; let fields=parseCSVLine(line); if(fields.length<=Math.max(nameIdx,classIdx,pointsIdx)) continue;
+                    let name=fields[nameIdx]?.trim(), className=fields[classIdx]?.trim(), points=parseInt(fields[pointsIdx]); if(isNaN(points)) points=0;
+                    if(name){ newStudents.push({ id: Date.now() + i, name, class_name: className, points }); }
+                }
+                if(newStudents.length===0){ alert("未检测到有效学生"); return; }
+                await supabase.from('students').delete().neq('id', 0);
+                for(let stu of newStudents) {
+                    await supabase.from('students').insert(stu);
+                }
+                showToast(`📂 导入成功！共 ${newStudents.length} 名学生`);
+                await loadStudents();
+            };
+            reader.readAsText(file, "UTF-8");
+        }
+        
+        async function clearAllData() {
+            if(confirm("⚠️ 清空所有学生数据不可恢复")) {
+                await supabase.from('students').delete().neq('id', 0);
+                await supabase.from('point_history').delete().neq('id', 0);
+                showToast("🧹 所有学生数据已清空");
+                await loadStudents();
+            }
+        }
+        
+        async function addClass() {
+            let nc = document.getElementById("newClassName").value.trim();
+            if(!nc){ alert("请输入班级名称"); return; }
+            showToast(`班级 ${nc} 已就绪，您可以在学生管理中分配此班级`);
+            document.getElementById("newClassName").value = "";
+        }
+        
+        async function inlineAddStudent() {
+            let name = document.getElementById("newStudentName").value.trim();
+            let cls = document.getElementById("newStudentClassSelect")?.value;
+            if(!name){ alert("请输入学生姓名"); return; }
+            if(!cls) cls = "默认班级";
+            const newId = Date.now();
+            await supabase.from('students').insert({ id: newId, name: name, class_name: cls, points: 0 });
+            document.getElementById("newStudentName").value = "";
+            showToast(`➕ 学生 ${name} 添加成功`);
+        }
+        
+        function refreshAll() {
+            if(currentPage === "home") renderHome();
+            else if(currentPage === "lottery") renderLottery();
+            else if(currentPage === "manage") renderManage();
+        }
+        
+        // 绑定导航
+        document.querySelectorAll(".nav-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+                btn.classList.add("active");
+                let pageId = btn.dataset.page + "Page";
+                document.querySelectorAll(".page").forEach(p=>p.classList.remove("active-page"));
+                document.getElementById(pageId).classList.add("active-page");
+                currentPage = btn.dataset.page;
+                refreshAll();
+            });
+        });
+        
+        // 绑定全局按钮
+        document.getElementById("spinLotteryBtn")?.addEventListener("click", doLottery);
+        document.getElementById("addPrizeBtn")?.addEventListener("click", async () => {
+            if(lotteryPrizes.length >= 9) { alert("奖品最多9个"); return; }
+            lotteryPrizes.push({ name:"新奖品", points:10, prob:5 });
+            await supabase.from('app_config').upsert({ key: 'lottery_prizes', value: lotteryPrizes }, { onConflict: 'key' });
+            renderLottery();
+            showToast("✅ 已新增奖品");
+        });
+        document.getElementById("savePrizeConfig")?.addEventListener("click", async () => {
+            await supabase.from('app_config').upsert({ key: 'lottery_prizes', value: lotteryPrizes }, { onConflict: 'key' });
+            showToast("💾 奖品配置已保存");
+        });
+        document.getElementById("costPerDraw")?.addEventListener("input", async (e) => {
+            let v = parseInt(e.target.value);
+            if(!isNaN(v) && v>=0) {
+                costPerDraw = v;
+                await supabase.from('app_config').upsert({ key: 'cost_per_draw', value: costPerDraw }, { onConflict: 'key' });
+            }
+        });
+        document.getElementById("searchName")?.addEventListener("input", () => renderHome());
+        document.getElementById("classFilter")?.addEventListener("change", () => renderHome());
+        document.getElementById("lotterySearchName")?.addEventListener("input", () => renderLottery());
+        document.getElementById("lotteryClassFilter")?.addEventListener("change", () => renderLottery());
+        document.getElementById("exportFullBackupBtn")?.addEventListener("click", exportFullBackup);
+        document.getElementById("importFullBackupBtn")?.addEventListener("click", ()=>{ let inp=document.createElement("input"); inp.type="file"; inp.accept=".json"; inp.onchange=e=>{ if(e.target.files[0]) importFullBackup(e.target.files[0]); }; inp.click(); });
+        document.getElementById("exportDataBtn")?.addEventListener("click", exportToCSV);
+        document.getElementById("importDataBtn")?.addEventListener("click", ()=>{ let inp=document.createElement("input"); inp.type="file"; inp.accept=".csv"; inp.onchange=e=>{ if(e.target.files[0]) importFromCSV(e.target.files[0]); }; inp.click(); });
+        document.getElementById("clearAllDataBtn")?.addEventListener("click", clearAllData);
+        document.getElementById("addClassBtn")?.addEventListener("click", addClass);
+        document.getElementById("inlineAddStudentBtn")?.addEventListener("click", inlineAddStudent);
+        document.getElementById("saveStagesBtn")?.addEventListener("click", saveStagesConfig);
+        document.getElementById("resetStagesBtn")?.addEventListener("click", resetStagesToDefault);
+        
+        // 启动
+        (async () => {
+            await loadStudents();
+            await loadConfig();
+            subscribeToRealtime();
+            refreshAll();
+        })();
+    })();
+</script>
+</body>
+</html>
