@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-    <title>蛋仔派对·班级宠物积分系统 | 管理员版</title>
+    <title>蛋仔派对·宠物乐园积分系统 | 管理员版</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { background: linear-gradient(145deg, #f9f1e0 0%, #fee9c8 100%); font-family: 'Segoe UI', 'Poppins', 'Comic Neue', system-ui, sans-serif; padding: 20px 16px 40px; min-height: 100vh; color: #2d3e2b; }
@@ -25,15 +25,15 @@
         .search-bar { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; background: #ffffffcc; border-radius: 48px; padding: 12px 20px; }
         .search-input, .class-select { flex: 1; min-width: 150px; padding: 12px 18px; border-radius: 60px; border: 2px solid #ffd9a5; background: white; font-size: 0.95rem; outline: none; }
         
-        .pet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 20px; margin-bottom: 40px; }
+        .pet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; margin-bottom: 40px; }
         .pet-card { background: linear-gradient(135deg, #fff6e8, #ffffff); border-radius: 36px; padding: 16px; box-shadow: 0 12px 20px rgba(0,0,0,0.08); border: 1px solid #ffdcab; transition: transform 0.15s; position: relative; }
         .pet-card:hover { transform: translateY(-4px); }
         .history-icon { position: absolute; top: 12px; right: 12px; background: #ffd966; border-radius: 30px; padding: 4px 10px; font-size: 0.7rem; cursor: pointer; font-weight: bold; z-index: 2; transition: 0.1s; }
         .history-icon:hover { background: #ffb347; color: white; }
-        .student-name { font-size: 1.5rem; font-weight: 800; color: #cc7b2e; display: flex; justify-content: space-between; }
+        .student-name { font-size: 1.5rem; font-weight: 800; color: #cc7b2e; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
         .class-badge { font-size: 0.75rem; background: #ffdbb5; padding: 4px 12px; border-radius: 40px; color: #a65419; }
-        .pet-area { text-align: center; margin: 10px 0; background: #fff2e2; border-radius: 48px; padding: 12px; }
-        .pet-emoji { font-size: 3.8rem; display: inline-block; }
+        .pet-area { text-align: center; margin: 10px 0; background: #fff2e2; border-radius: 48px; padding: 12px; transition: 0.1s; }
+        .pet-emoji { font-size: 3.8rem; display: inline-block; transition: transform 0.1s; }
         .pet-rank { font-weight: bold; background: #ffd966; display: inline-block; padding: 4px 14px; border-radius: 40px; font-size: 0.8rem; margin-top: 6px; }
         .progress-bar-bg { background: #ffe0b5; border-radius: 40px; height: 12px; margin: 12px 0; overflow: hidden; }
         .progress-fill { background: #ffaa55; width: 0%; height: 100%; border-radius: 40px; transition: width 0.1s; }
@@ -45,6 +45,8 @@
         .rank-table { width: 100%; border-collapse: collapse; text-align: left; }
         .rank-table th, .rank-table td { padding: 12px 8px; border-bottom: 1px solid #ffe0bc; }
         .rank-table th { color: #b65f1a; }
+        .change-pet-btn { background: #ffe0b5; border: none; border-radius: 40px; padding: 4px 12px; font-size: 0.75rem; cursor: pointer; margin-top: 6px; display: inline-flex; align-items: center; gap: 4px; }
+        .change-pet-btn:hover { background: #ffcc88; }
         
         .lottery-section { max-width: 500px; margin: 0 auto; }
         .student-selector { background: #fff7e8; border-radius: 40px; padding: 16px; margin-bottom: 20px; }
@@ -104,7 +106,7 @@
         .daily-summary th, .daily-summary td { padding: 8px; text-align: left; border-bottom: 1px solid #ffd9a5; }
         .daily-summary th { background: #ffe2bb; border-radius: 16px; }
         .upgrade-modal { background: #ffefc0; border-radius: 60px; padding: 28px 24px; text-align: center; max-width: 280px; animation: bounce 0.3s; border: 5px solid #ffb347; }
-        @keyframes bounce { 0% { transform: scale(0.7); opacity: 0; } 80% { transform: scale(1.02); } 100% { transform: scale(1); } }
+        @keyframes bounce { 0% { transform: scale(0.7); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
         .student-pick-btn { background: #ffe0b5; border-radius: 40px; padding: 6px 14px; font-size: 0.8rem; border: none; margin: 4px; cursor: pointer; transition: 0.05s; }
         .student-pick-btn:active { transform: scale(0.96); }
         .toast-msg { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #2e7d32; color: white; padding: 10px 24px; border-radius: 60px; font-weight: bold; z-index: 2000; box-shadow: 0 4px 12px rgba(0,0,0,0.2); animation: fadeOut 2s forwards; pointer-events: none; }
@@ -118,19 +120,21 @@
         .login-modal .error-msg { color: #c62828; font-size: 0.85rem; margin-top: 8px; }
         .overlay-mask { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 2000; visibility: hidden; opacity:0; transition: 0.2s; }
         .overlay-mask.show { visibility: visible; opacity:1; }
+        
+        .pet-selector-modal { background: #fffaf0; border-radius: 48px; width: 90%; max-width: 500px; padding: 24px; text-align: center; }
+        .pet-selector-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 16px; margin: 20px 0; }
+        .pet-option-card { background: #ffefdb; border-radius: 28px; padding: 12px; cursor: pointer; transition: 0.05s; }
+        .pet-option-card:hover { background: #ffe2bb; transform: scale(0.98); }
+        .pet-option-emoji { font-size: 2.5rem; }
+        .pet-option-name { font-weight: bold; margin-top: 6px; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div class="app-container">
-    <div class="top-bar">
-        <div class="login-status" id="loginStatus">
-            <span>🔐 未登录</span>
-            <button id="loginBtn">登录</button>
-        </div>
-    </div>
+    <div class="top-bar"><div class="login-status" id="loginStatus"><span>🔐 未登录</span><button id="loginBtn">登录</button></div></div>
     <div class="nav-bar">
-        <button class="nav-btn active" data-page="home">🏠 蛋仔家园</button>
+        <button class="nav-btn active" data-page="home">🏠 宠物家园</button>
         <button class="nav-btn" data-page="lottery">🎁 积分抽奖</button>
         <button class="nav-btn" data-page="manage">📚 班级·学生管理</button>
     </div>
@@ -141,480 +145,124 @@
             <select id="classFilter" class="class-select"></select>
         </div>
         <div id="petCardsContainer" class="pet-grid">加载中...</div>
-        <div class="rank-wrapper">
-            <h3>🏆 全校积分榜 · 全校排名</h3>
-            <div id="rankListContainer">加载中...</div>
-        </div>
+        <div class="rank-wrapper"><h3>🏆 全校积分榜 · 全校排名</h3><div id="rankListContainer">加载中...</div></div>
     </div>
 
     <div id="lotteryPage" class="page">
         <div class="lottery-section">
-            <div class="student-selector">
-                <h3>🎯 选择抽奖学生</h3>
-                <div style="display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0;">
-                    <input type="text" id="lotterySearchName" placeholder="姓名搜索" class="search-input" style="flex:2">
-                    <select id="lotteryClassFilter" class="class-select" style="flex:1"></select>
-                </div>
-                <div id="studentPickList" style="max-height: 140px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;"></div>
-                <div id="selectedStudentInfo" class="selected-student-info">⚡ 未选择学生</div>
-            </div>
-            <div class="card" style="margin-bottom: 16px; padding: 12px;">
-                <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
-                    <span>🎲 单次消耗: <input type="number" id="costPerDraw" value="100" step="10" style="width: 80px; border-radius: 40px; border: 1px solid #ffbc6e; padding: 4px 8px;"></span>
-                    <span>✨ 当前积分: <strong id="selectedPoints">0</strong></span>
-                </div>
-            </div>
+            <div class="student-selector"><h3>🎯 选择抽奖学生</h3><div style="display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0;"><input type="text" id="lotterySearchName" placeholder="姓名搜索" class="search-input" style="flex:2"><select id="lotteryClassFilter" class="class-select" style="flex:1"></select></div><div id="studentPickList" style="max-height: 140px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;"></div><div id="selectedStudentInfo" class="selected-student-info">⚡ 未选择学生</div></div>
+            <div class="card" style="margin-bottom: 16px; padding: 12px;"><div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;"><span>🎲 单次消耗: <input type="number" id="costPerDraw" value="100" step="10" style="width: 80px; border-radius: 40px; border: 1px solid #ffbc6e; padding: 4px 8px;"></span><span>✨ 当前积分: <strong id="selectedPoints">0</strong></span></div></div>
             <div id="lotteryGrid" class="lottery-grid"></div>
             <button id="spinLotteryBtn" class="draw-btn">🎲 转蛋抽奖 🎲</button>
-            <div class="config-area" id="prizeConfigArea">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h4>⚙️ 自定义奖品&概率 (最多9项)</h4>
-                    <button id="addPrizeBtn" style="background:#ffaa66;">➕ 新增奖品</button>
-                </div>
-                <div id="prizeConfigList"></div>
-                <button id="savePrizeConfig" style="margin-top: 12px;">💾 保存配置</button>
-            </div>
+            <div class="config-area" id="prizeConfigArea"><div style="display: flex; justify-content: space-between; align-items: center;"><h4>⚙️ 自定义奖品&概率 (最多9项)</h4><button id="addPrizeBtn" style="background:#ffaa66;">➕ 新增奖品</button></div><div id="prizeConfigList"></div><button id="savePrizeConfig" style="margin-top: 12px;">💾 保存配置</button></div>
         </div>
     </div>
 
     <div id="managePage" class="page">
-        <div class="backup-buttons">
-            <span style="font-weight:bold;">💾 完整备份迁移</span>
-            <div style="display: flex; gap: 8px;">
-                <button id="exportFullBackupBtn">📦 导出完整备份(所有数据)</button>
-                <button id="importFullBackupBtn">📂 导入完整备份(恢复)</button>
-            </div>
-        </div>
-        <div class="import-export">
-            <button id="exportDataBtn">📤 导出CSV(学生简表)</button>
-            <button id="importDataBtn">📥 导入CSV(学生简表)</button>
-            <button id="clearAllDataBtn" class="danger-btn">⚠️ 清空所有数据</button>
-        </div>
-        <div class="class-manager">
-            <h3>🏷️ 班级管理</h3>
-            <div class="class-list" id="classListContainer"></div>
-            <div style="display: flex; gap: 12px; margin-top: 12px;">
-                <input type="text" id="newClassName" placeholder="新班级名称" style="flex:1; padding: 8px 16px; border-radius: 60px; border: 2px solid #ffd9a5;">
-                <button id="addClassBtn">➕ 添加班级</button>
-            </div>
-        </div>
-        <div class="inline-add-form">
-            <div class="form-group"><label>👤 学生姓名</label><input type="text" id="newStudentName" placeholder="例: 张小蛋"></div>
-            <div class="form-group"><label>🏫 班级</label><select id="newStudentClassSelect"></select></div>
-            <button id="inlineAddStudentBtn" style="align-self: center;">➕ 添加学生</button>
-        </div>
-        <div class="manage-search-bar">
-            <input type="text" id="manageSearchName" placeholder="🔍 搜索学生姓名" class="search-input" style="flex:2;">
-            <select id="manageSearchClass" class="class-select" style="flex:1;"></select>
-        </div>
+        <div class="backup-buttons"><span style="font-weight:bold;">💾 完整备份迁移</span><div style="display: flex; gap: 8px;"><button id="exportFullBackupBtn">📦 导出完整备份(所有数据)</button><button id="importFullBackupBtn">📂 导入完整备份(恢复)</button></div></div>
+        <div class="import-export"><button id="exportDataBtn">📤 导出CSV(学生简表)</button><button id="importDataBtn">📥 导入CSV(学生简表)</button><button id="clearAllDataBtn" class="danger-btn">⚠️ 清空所有数据</button></div>
+        <div class="class-manager"><h3>🏷️ 班级管理</h3><div class="class-list" id="classListContainer"></div><div style="display: flex; gap: 12px; margin-top: 12px;"><input type="text" id="newClassName" placeholder="新班级名称" style="flex:1; padding: 8px 16px; border-radius: 60px; border: 2px solid #ffd9a5;"><button id="addClassBtn">➕ 添加班级</button></div></div>
+        <div class="inline-add-form"><div class="form-group"><label>👤 学生姓名</label><input type="text" id="newStudentName" placeholder="例: 张小蛋"></div><div class="form-group"><label>🏫 班级</label><select id="newStudentClassSelect"></select></div><button id="inlineAddStudentBtn" style="align-self: center;">➕ 添加学生</button></div>
+        <div class="manage-search-bar"><input type="text" id="manageSearchName" placeholder="🔍 搜索学生姓名" class="search-input" style="flex:2;"><select id="manageSearchClass" class="class-select" style="flex:1;"></select></div>
         <div class="manage-table" id="manageTableContainer"></div>
-        
-        <!-- 积分记录管理模块 -->
-        <div class="history-manager" id="historyManagerPanel">
-            <h3>📜 积分记录管理（增删改+批量删除 · 自动保留近7天）</h3>
-            <div class="history-filter-bar">
-                <input type="text" id="historySearchStudent" placeholder="按学生姓名搜索" class="search-input" style="flex:1">
-                <button id="refreshHistoryBtn">🔄 刷新记录</button>
-                <button id="cleanHistoryBtn" class="danger-btn">🧹 手动清理7天前记录</button>
-            </div>
-            <div class="batch-bar">
-                <button id="batchDeleteHistoryBtn" class="danger-btn">🗑️ 批量删除选中记录</button>
-                <button id="addHistoryRecordBtn" style="background:#8bc34a;">➕ 新增积分记录</button>
-            </div>
-            <div class="history-table-wrapper" id="historyTableContainer">加载中...</div>
-        </div>
-
-        <div class="stage-config">
-            <h3>🐣 蛋仔段位升级规则自定义</h3>
-            <p style="font-size:0.8rem; margin-bottom:8px;">设置每个段位所需的<strong>最低积分</strong>（递增）。</p>
-            <div id="stagesConfigContainer" class="stage-grid"></div>
-            <div style="margin-top: 12px; display: flex; gap: 10px;">
-                <button id="saveStagesBtn">💾 保存段位规则</button>
-                <button id="resetStagesBtn">🔄 重置为默认规则(每100分)</button>
-            </div>
-        </div>
+        <div class="history-manager" id="historyManagerPanel"><h3>📜 积分记录管理（增删改+批量删除 · 手动清理7天前记录）</h3><div class="history-filter-bar"><input type="text" id="historySearchStudent" placeholder="按学生姓名搜索" class="search-input" style="flex:1"><button id="refreshHistoryBtn">🔄 刷新记录</button><button id="cleanHistoryBtn" class="danger-btn">🧹 手动清理7天前记录</button></div><div class="batch-bar"><button id="batchDeleteHistoryBtn" class="danger-btn">🗑️ 批量删除选中记录</button><button id="addHistoryRecordBtn" style="background:#8bc34a;">➕ 新增积分记录</button></div><div class="history-table-wrapper" id="historyTableContainer">加载中...</div></div>
+        <div class="stage-config"><h3>🐣 蛋仔段位升级规则自定义</h3><p style="font-size:0.8rem; margin-bottom:8px;">设置每个段位所需的<strong>最低积分</strong>（递增）。</p><div id="stagesConfigContainer" class="stage-grid"></div><div style="margin-top: 12px; display: flex; gap: 10px;"><button id="saveStagesBtn">💾 保存段位规则</button><button id="resetStagesBtn">🔄 重置为默认规则(每100分)</button></div></div>
     </div>
 </div>
 
-<div id="historyModal" class="modal-mask">
-    <div class="history-modal">
-        <h3 id="historyStudentName">积分变动记录</h3>
-        <button id="closeHistoryBtn" class="close-btn">✖️ 关闭</button>
-        <div style="clear:both;"></div>
-        <div id="dailySummaryContainer"></div>
-        <div style="font-weight:bold; margin: 12px 0 8px 0;">📋 详细记录</div>
-        <ul id="historyList" class="history-list"></ul>
-    </div>
-</div>
-
-<div id="upgradeModal" class="modal-mask"><div class="upgrade-modal"><div style="font-size: 3rem;">🐣✨</div><h2 id="upgradeMsg">蛋仔进阶！</h2><p id="upgradeDetail"></p><button id="closeModalBtn">太棒啦🎉</button></div></div>
-
-<div id="loginOverlay" class="overlay-mask">
-    <div class="login-modal">
-        <h3>🔐 管理员登录</h3>
-        <input type="text" id="loginUsername" placeholder="用户名" autocomplete="off">
-        <input type="password" id="loginPassword" placeholder="密码">
-        <div id="loginError" class="error-msg"></div>
-        <button id="confirmLoginBtn">登 录</button>
-        <button id="cancelLoginBtn" style="background:#ccc; margin-left:12px;">取 消</button>
-    </div>
-</div>
+<!-- 历史记录弹窗 -->
+<div id="historyModal" class="modal-mask"><div class="history-modal"><h3 id="historyStudentName">积分变动记录</h3><button id="closeHistoryBtn" class="close-btn">✖️ 关闭</button><div style="clear:both;"></div><div id="dailySummaryContainer"></div><div style="font-weight:bold; margin: 12px 0 8px 0;">📋 详细记录</div><ul id="historyList" class="history-list"></ul></div></div>
+<!-- 升级弹窗 -->
+<div id="upgradeModal" class="modal-mask"><div class="upgrade-modal"><div style="font-size: 3rem;">🐣✨</div><h2 id="upgradeMsg">宠物进阶！</h2><p id="upgradeDetail"></p><button id="closeModalBtn">太棒啦🎉</button></div></div>
+<!-- 登录弹窗 -->
+<div id="loginOverlay" class="overlay-mask"><div class="login-modal"><h3>🔐 管理员登录</h3><input type="text" id="loginUsername" placeholder="用户名" autocomplete="off"><input type="password" id="loginPassword" placeholder="密码"><div id="loginError" class="error-msg"></div><button id="confirmLoginBtn">登 录</button><button id="cancelLoginBtn" style="background:#ccc; margin-left:12px;">取 消</button></div></div>
+<!-- 宠物选择弹窗 -->
+<div id="petSelectorModal" class="modal-mask"><div class="pet-selector-modal"><h3>🐾 选择宠物伙伴</h3><div id="petSelectorGrid" class="pet-selector-grid"></div><button id="closePetSelectorBtn" style="background:#ccc;">取 消</button></div></div>
 
 <script>
     (function(){
         const SUPABASE_URL = "https://jquoooxqmwlqnqkpfxrm.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_bkQDJ3_R0zStq2yia6zotw_tPh_ePvV";
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const ADMIN_USERNAME = "what", ADMIN_PASSWORD = "what123";
+        let isAdmin = false, students = [], lotteryPrizes = [], costPerDraw = 100, customStages = [], currentPage = "home", selectedStudentId = null, isSpinning = false;
+        let currentSelectingStudentId = null;
         
-        const ADMIN_USERNAME = "what";
-        const ADMIN_PASSWORD = "what123";
+        // 扩充宠物种类：蛋仔、小猪、小狗、小鸭、小猫、小羊、小兔、小熊
+        const PETS_LIB = [
+    { id: "egg", name: "蛋仔", stages: ["🥚","🐣","🐥","🐤","🐔","⭐🐤","✨🐣","🔥🐥","🌈🐔","👑🐉"] },
+    { id: "pig", name: "小猪", stages: ["🐷","🐽","🐖","🐗","🐷✨","🐽✨","🐖✨","🐗✨","👑🐷","🌈🐷"] },
+    { id: "dog", name: "小狗", stages: ["🐶","🐕","🦴","🐩","🐶✨","🐕✨","🦴✨","🐩✨","👑🐶","🌈🐶"] },
+    { id: "duck", name: "小鸭", stages: ["🦆","🐥","🦢","🌊","🦆✨","🐥✨","🦢✨","🌊✨","👑🦆","🌈🦆"] },
+    { id: "cat", name: "小猫", stages: ["🐱","🐈","🐾","🐱⭐","🐱✨","🐈✨","🐾✨","🐱🔥","👑🐱","🌈🐱"] },
+    { id: "sheep", name: "小羊", stages: ["🐑","🐏","🌿","🐑⭐","🐑✨","🐏✨","🌿✨","🐑🔥","👑🐑","🌈🐑"] },
+    { id: "rabbit", name: "小兔", stages: ["🐇","🐰","🥕","🐇⭐","🐇✨","🐰✨","🥕✨","🐇🔥","👑🐇","🌈🐇"] },
+    { id: "bear", name: "小熊", stages: ["🐻","🐻‍❄️","🍯","🐻⭐","🐻✨","🐻‍❄️✨","🍯✨","🐻🔥","👑🐻","🌈🐻"] }
+];
         
-        let isAdmin = false;
-        let students = [];
-        let lotteryPrizes = [];
-        let costPerDraw = 100;
-        let customStages = [];
-        let currentPage = "home";
-        let selectedStudentId = null;
-        let isSpinning = false;
+        function getPetById(petId) { return PETS_LIB.find(p => p.id === petId) || PETS_LIB[0]; }
         
-        function showToast(msg) { 
-            let d = document.createElement("div"); 
-            d.className = "toast-msg"; 
-            d.innerText = msg; 
-            document.body.appendChild(d); 
-            setTimeout(()=>d.remove(),2000); 
+        function getPetIconByPoints(petId, points) {
+            const pet = getPetById(petId);
+            let stageIndex = 0;
+            for (let i = customStages.length-1; i>=0; i--) {
+                if (points >= customStages[i].min) { stageIndex = i; break; }
+            }
+            if (stageIndex >= pet.stages.length) stageIndex = pet.stages.length-1;
+            return pet.stages[stageIndex];
         }
         
-        function escapeHtml(str) { 
-            if(!str) return ''; 
-            return str.replace(/[&<>]/g, function(m){ 
-                if(m==='&') return '&amp;'; 
-                if(m==='<') return '&lt;'; 
-                if(m==='>') return '&gt;'; 
-                return m;
-            }); 
+        function getPetStageName(petId, points) {
+    const pet = getPetById(petId);
+    let stageIndex = 0;
+    for (let i = customStages.length-1; i>=0; i--) {
+        if (points >= customStages[i].min) { stageIndex = i; break; }
+    }
+    // 获取原始段位名（如“蛋仔萌新”），去掉“蛋仔”前缀得到通用词
+    let rawStageName = customStages[stageIndex]?.name || "萌新";
+    let commonStageName = rawStageName.replace(/蛋仔/g, '').trim();
+    if (commonStageName === "") commonStageName = "萌新";
+    return `${pet.name}·${commonStageName}`;
+}
+            const pet = getPetById(petId);
+            let stageIndex = 0;
+            for (let i = customStages.length-1; i>=0; i--) {
+                if (points >= customStages[i].min) { stageIndex = i; break; }
+            }
+            const baseStage = customStages[stageIndex]?.name || "萌新";
+            return `${pet.name}·${baseStage}`;
         }
         
-        function checkAdminAndToast(actionName) {
-            if(!isAdmin) { showToast(`请先登录管理员账号后再进行${actionName}`); return false; }
-            return true;
-        }
+        function showToast(msg) { let d = document.createElement("div"); d.className = "toast-msg"; d.innerText = msg; document.body.appendChild(d); setTimeout(()=>d.remove(),2000); }
+        function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+        function checkAdminAndToast(actionName) { if(!isAdmin) { showToast(`请先登录管理员账号后再进行${actionName}`); return false; } return true; }
         
         function updateLoginUI() {
             const statusDiv = document.getElementById("loginStatus");
-            if(isAdmin) {
-                statusDiv.innerHTML = `<span>👑 管理员已登录</span><button id="logoutBtn">登出</button>`;
-                const logoutBtn = document.getElementById("logoutBtn");
-                if(logoutBtn) logoutBtn.onclick = () => { logout(); };
-            } else {
-                statusDiv.innerHTML = `<span>🔐 未登录</span><button id="loginBtn">登录</button>`;
-                const loginBtn = document.getElementById("loginBtn");
-                if(loginBtn) loginBtn.onclick = () => { showLoginModal(); };
-            }
+            if(isAdmin) { statusDiv.innerHTML = `<span>👑 管理员已登录</span><button id="logoutBtn">登出</button>`; document.getElementById("logoutBtn")?.addEventListener("click", logout); } 
+            else { statusDiv.innerHTML = `<span>🔐 未登录</span><button id="loginBtn">登录</button>`; document.getElementById("loginBtn")?.addEventListener("click", ()=>document.getElementById("loginOverlay").classList.add("show")); }
             refreshAll();
         }
+        function logout() { isAdmin = false; localStorage.removeItem("eggy_admin"); selectedStudentId = null; updateLoginUI(); showToast("已退出登录"); refreshAll(); }
+        function checkStoredLogin() { isAdmin = localStorage.getItem("eggy_admin") === "true"; updateLoginUI(); }
         
-        function showLoginModal() { document.getElementById("loginOverlay").classList.add("show"); }
-        function hideLoginModal() { document.getElementById("loginOverlay").classList.remove("show"); }
-        
-        function login(username, password) {
-            if(username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-                isAdmin = true;
-                localStorage.setItem("eggy_admin", "true");
-                hideLoginModal();
-                updateLoginUI();
-                showToast("登录成功！");
-                refreshAll();
-            } else {
-                document.getElementById("loginError").innerText = "用户名或密码错误";
-            }
-        }
-        
-        function logout() {
-            isAdmin = false;
-            localStorage.removeItem("eggy_admin");
-            selectedStudentId = null;
-            updateLoginUI();
-            showToast("已退出登录");
-            refreshAll();
-        }
-        
-        function checkStoredLogin() {
-            const stored = localStorage.getItem("eggy_admin");
-            isAdmin = stored === "true";
-            updateLoginUI();
-        }
-        
-        function getStageByPoints(points) {
-            if(!customStages.length) return { name:"蛋仔萌新", icon:"🥚", min:0 };
-            let found = customStages[0];
-            for(let i=customStages.length-1; i>=0; i--) {
-                if(points >= customStages[i].min) { found = customStages[i]; break; }
-            }
-            return found;
-        }
-        
-        function getNextStageMin(points) {
-            let current = getStageByPoints(points);
-            let idx = customStages.findIndex(s => s.name === current.name);
-            if(idx === customStages.length-1) return 0;
-            return customStages[idx+1].min;
-        }
-        
-        function getProgressPercent(points) {
-            let current = getStageByPoints(points);
-            let idx = customStages.findIndex(s => s.name === current.name);
-            let currentMin = current.min;
-            let nextMin = (idx === customStages.length-1) ? currentMin + 100 : customStages[idx+1].min;
-            let range = nextMin - currentMin;
-            if(range <= 0) return 100;
-            return Math.min(100, Math.floor(((points - currentMin) / range) * 100));
-        }
-        
-        function nextStageNeed(points) {
-            let nextMin = getNextStageMin(points);
-            if(nextMin === 0) return 0;
-            return Math.max(0, nextMin - points);
-        }
-        
-        function showUpgradeModal(name, from, to) { 
-            document.getElementById("upgradeMsg").innerHTML = `${name} 的蛋仔进阶啦！`; 
-            document.getElementById("upgradeDetail").innerHTML = `${from} → ${to} 🎉`; 
-            let m = document.getElementById("upgradeModal"); 
-            m.classList.add("show"); 
-            let t = setTimeout(()=>m.classList.remove("show"),2500); 
-            document.getElementById("closeModalBtn").onclick = ()=>{ m.classList.remove("show"); clearTimeout(t); }; 
-        }
-        
-        async function loadStudents() {
+        async function loadStudents() { 
             const { data, error } = await supabase.from('students').select('*').order('id');
-            if(error) { console.error(error); return; }
-            students = data || [];
+            if(error) console.error(error);
+            else students = (data || []).map(s => ({ ...s, pet_id: s.pet_id || 'egg' })); // 默认宠物 egg
             refreshAll();
         }
-        
         async function loadConfig() {
-            const { data, error } = await supabase.from('app_config').select('key, value');
-            if(error) { console.error(error); return; }
-            for(let item of data) {
-                if(item.key === 'lottery_prizes') lotteryPrizes = item.value;
-                else if(item.key === 'cost_per_draw') costPerDraw = item.value;
-                else if(item.key === 'custom_stages') customStages = item.value;
+            const { data } = await supabase.from('app_config').select('key, value');
+            if(data) for(let item of data) { 
+                if(item.key === 'lottery_prizes') lotteryPrizes = item.value; 
+                else if(item.key === 'cost_per_draw') costPerDraw = item.value; 
+                else if(item.key === 'custom_stages') customStages = item.value; 
             }
-            if(!lotteryPrizes.length) lotteryPrizes = [
-                { name:"谢谢参与", points:0, prob:20 },
-                { name:"+50积分", points:50, prob:12 },
-                { name:"+100积分", points:100, prob:8 },
-                { name:"+200积分", points:200, prob:5 },
-                { name:"+500积分", points:500, prob:2 },
-                { name:"🎁 惊喜抽奖", points:35, prob:10 },
-                { name:"🍃 空", points:0, prob:15 },
-                { name:"🍃 空", points:0, prob:15 },
-                { name:"🍃 空", points:0, prob:13 }
-            ];
-            if(!customStages.length) customStages = [
-                { name:"蛋仔萌新", icon:"🥚", min:0 },
-                { name:"初学蛋仔", icon:"🐣", min:100 },
-                { name:"活力蛋仔", icon:"🐥", min:200 },
-                { name:"进阶蛋仔", icon:"🐤", min:300 },
-                { name:"精英蛋仔", icon:"🐔", min:400 },
-                { name:"闪耀蛋仔", icon:"⭐🐤", min:500 },
-                { name:"璀璨蛋仔", icon:"✨🐣", min:600 },
-                { name:"传奇蛋仔", icon:"🔥🐥", min:700 },
-                { name:"巅峰蛋仔", icon:"🌈🐔", min:800 },
-                { name:"至尊蛋神", icon:"👑🐉", min:900 }
-            ];
-            document.getElementById("costPerDraw").value = costPerDraw;
+            if(!lotteryPrizes.length) lotteryPrizes = [{ name:"谢谢参与", points:0, prob:20 },{ name:"+50积分", points:50, prob:12 },{ name:"+100积分", points:100, prob:8 },{ name:"+200积分", points:200, prob:5 },{ name:"+500积分", points:500, prob:2 },{ name:"🎁 惊喜", points:35, prob:10 },{ name:"🍃 空", points:0, prob:15 },{ name:"🍃 空", points:0, prob:15 },{ name:"🍃 空", points:0, prob:13 }];
+            if(!customStages.length) customStages = [{ name:"蛋仔萌新", icon:"🥚", min:0 },{ name:"初学蛋仔", icon:"🐣", min:100 },{ name:"活力蛋仔", icon:"🐥", min:200 },{ name:"进阶蛋仔", icon:"🐤", min:300 },{ name:"精英蛋仔", icon:"🐔", min:400 },{ name:"闪耀蛋仔", icon:"⭐🐤", min:500 },{ name:"璀璨蛋仔", icon:"✨🐣", min:600 },{ name:"传奇蛋仔", icon:"🔥🐥", min:700 },{ name:"巅峰蛋仔", icon:"🌈🐔", min:800 },{ name:"至尊蛋神", icon:"👑🐉", min:900 }];
+            document.getElementById("costPerDraw") && (document.getElementById("costPerDraw").value = costPerDraw);
             refreshAll();
-        }
-        
-        function subscribeToRealtime() {
-            supabase.channel('students-changes')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, () => { loadStudents(); })
-                .subscribe();
-            supabase.channel('config-changes')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'app_config' }, () => { loadConfig(); })
-                .subscribe();
-        }
-        
-        // ========== 积分记录管理（删除记录不影响学生积分）==========
-        async function cleanupOldHistoryOnly() {
-            if (!isAdmin) return;
-            const sevenDaysAgo = new Date();
-            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-            const { data: oldRecords, error } = await supabase
-                .from('point_history')
-                .select('id')
-                .lt('timestamp', sevenDaysAgo.toISOString());
-            if (error) return;
-            if (oldRecords.length) {
-                await supabase.from('point_history').delete().lt('timestamp', sevenDaysAgo.toISOString());
-                showToast(`🧹 已清理 ${oldRecords.length} 条超过7天的积分记录`);
-            }
-        }
-        
-        async function loadHistoryRecordsForManage() {
-            const { data, error } = await supabase.from('point_history').select('*').order('timestamp', { ascending: false });
-            if (error) { console.error(error); return []; }
-            const studentMap = new Map(students.map(s => [s.id, s]));
-            return data.map(h => ({
-                ...h,
-                student_name: studentMap.get(h.student_id)?.name || '未知',
-                student_class: studentMap.get(h.student_id)?.class_name || '未知'
-            }));
-        }
-        
-        let currentHistoryRecords = [];
-        async function renderHistoryManagement() {
-            if (!isAdmin) {
-                document.getElementById("historyTableContainer").innerHTML = '<div style="padding:20px;text-align:center;">🔒 请登录管理员后管理积分记录</div>';
-                return;
-            }
-            await cleanupOldHistoryOnly();
-            let records = await loadHistoryRecordsForManage();
-            currentHistoryRecords = records;
-            let searchKeyword = document.getElementById("historySearchStudent")?.value.toLowerCase() || "";
-            if (searchKeyword) {
-                records = records.filter(r => r.student_name.toLowerCase().includes(searchKeyword));
-            }
-            let html = `<div style="margin-bottom:8px;"><label><input type="checkbox" id="selectAllHistoryCheckbox"> 全选</label></div>
-            <table class="history-table">
-                <thead><tr><th><input type="checkbox" id="selectAllHistoryHeader"></th><th>学生</th><th>班级</th><th>变更分</th><th>变更后积分</th><th>原因</th><th>时间</th><th>操作</th></tr></thead>
-                <tbody>`;
-            for (let rec of records) {
-                let timeStr = new Date(rec.timestamp).toLocaleString();
-                html += `<tr data-id="${rec.id}">
-                    <td><input type="checkbox" class="history-checkbox" value="${rec.id}"></td>
-                    <td>${escapeHtml(rec.student_name)}</td>
-                    <td>${escapeHtml(rec.student_class)}</td>
-                    <td><input type="number" class="edit-delta" value="${rec.delta}" style="width:80px;" data-id="${rec.id}"></td>
-                    <td>${rec.new_points}</td>
-                    <td><input type="text" class="edit-reason" value="${escapeHtml(rec.reason)}" style="width:130px;" data-id="${rec.id}"></td>
-                    <td>${timeStr}</td>
-                    <td><button class="save-history-btn" data-id="${rec.id}">💾保存</button><button class="del-single-history" data-id="${rec.id}">❌删除</button></td>
-                </tr>`;
-            }
-            html += `</tbody></table>`;
-            document.getElementById("historyTableContainer").innerHTML = html;
-            
-            // 保存编辑
-            document.querySelectorAll('.save-history-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    if (!checkAdminAndToast("修改积分记录")) return;
-                    let id = parseInt(btn.dataset.id);
-                    let row = btn.closest('tr');
-                    let newDelta = parseInt(row.querySelector('.edit-delta').value);
-                    let newReason = row.querySelector('.edit-reason').value;
-                    if (isNaN(newDelta)) { alert("变更分须为数字"); return; }
-                    let originalRec = currentHistoryRecords.find(r => r.id === id);
-                    if (!originalRec) return;
-                    // 计算新的 new_points（基于原记录前后顺序重新计算）
-                    const { data: allHistory } = await supabase.from('point_history').select('*').eq('student_id', originalRec.student_id).order('timestamp', { ascending: true });
-                    if (allHistory) {
-                        let running = 0;
-                        for (let h of allHistory) {
-                            if (h.id === id) {
-                                running = Math.max(0, running + newDelta);
-                                await supabase.from('point_history').update({ delta: newDelta, new_points: running, reason: newReason }).eq('id', id);
-                            } else {
-                                running = Math.max(0, running + h.delta);
-                                if (h.id !== id) await supabase.from('point_history').update({ new_points: running }).eq('id', h.id);
-                            }
-                        }
-                        await supabase.from('students').update({ points: running }).eq('id', originalRec.student_id);
-                    }
-                    showToast("记录已更新");
-                    await loadStudents();
-                    await renderHistoryManagement();
-                    if (currentPage === 'manage') renderManage();
-                });
-            });
-            
-            // 单条删除（不影响学生积分）
-            document.querySelectorAll('.del-single-history').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    if (!checkAdminAndToast("删除记录")) return;
-                    let id = parseInt(btn.dataset.id);
-                    let rec = currentHistoryRecords.find(r => r.id === id);
-                    if (rec && confirm(`删除该记录不会影响学生当前积分，确定删除吗？`)) {
-                        await supabase.from('point_history').delete().eq('id', id);
-                        showToast("已删除记录（学生积分不变）");
-                        await renderHistoryManagement();
-                        if (currentPage === 'manage') renderManage();
-                    }
-                });
-            });
-            
-            // 全选逻辑
-            const selectAllHeader = document.getElementById("selectAllHistoryHeader");
-            const selectAllDiv = document.getElementById("selectAllHistoryCheckbox");
-            const syncCheckboxes = () => {
-                let allCbs = document.querySelectorAll('.history-checkbox');
-                let checkedAll = allCbs.length === document.querySelectorAll('.history-checkbox:checked').length;
-                if (selectAllHeader) selectAllHeader.checked = checkedAll;
-                if (selectAllDiv) selectAllDiv.checked = checkedAll;
-            };
-            if (selectAllHeader) selectAllHeader.addEventListener('change', (e) => { document.querySelectorAll('.history-checkbox').forEach(cb => cb.checked = e.target.checked); });
-            if (selectAllDiv) selectAllDiv.addEventListener('change', (e) => { document.querySelectorAll('.history-checkbox').forEach(cb => cb.checked = e.target.checked); });
-            document.querySelectorAll('.history-checkbox').forEach(cb => cb.addEventListener('change', syncCheckboxes));
-        }
-        
-        async function batchDeleteHistoryRecords() {
-            if (!checkAdminAndToast("批量删除记录")) return;
-            let checkedIds = Array.from(document.querySelectorAll('.history-checkbox:checked')).map(cb => parseInt(cb.value));
-            if (checkedIds.length === 0) { alert("请至少选择一条记录"); return; }
-            if (!confirm(`确认删除 ${checkedIds.length} 条积分记录？删除后不影响学生当前积分，确定吗？`)) return;
-            await supabase.from('point_history').delete().in('id', checkedIds);
-            showToast(`已删除 ${checkedIds.length} 条记录（学生积分不变）`);
-            await renderHistoryManagement();
-            if (currentPage === 'manage') renderManage();
-        }
-        
-        async function addHistoryRecord() {
-            if (!checkAdminAndToast("新增积分记录")) return;
-            if (students.length === 0) { alert("请先添加学生"); return; }
-            let delta = prompt("请输入积分变动（正数为增加，负数为减少）:", "10");
-            if (delta === null) return;
-            let deltaNum = parseInt(delta);
-            if (isNaN(deltaNum)) { alert("无效数字"); return; }
-            let reason = prompt("请输入变动原因:", "手动新增记录");
-            if (reason === null) reason = "手动新增记录";
-            
-            let studentOptions = students.map(s => `<option value="${s.id}">${escapeHtml(s.name)} (${s.class_name})</option>`).join('');
-            let wrapper = document.createElement('div');
-            wrapper.innerHTML = `<div style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:20px; border-radius:32px; z-index:10000; box-shadow:0 10px 25px black;">
-                <h4>选择学生</h4>
-                <select id="tempStudentSelect" style="padding:8px; border-radius:20px;">${studentOptions}</select>
-                <div style="margin-top:16px;"><button id="confirmSelectStudent">确认</button><button id="cancelSelectStudent">取消</button></div>
-            </div>`;
-            document.body.appendChild(wrapper);
-            const selectedId = await new Promise((resolve) => {
-                wrapper.querySelector('#confirmSelectStudent').onclick = () => { resolve(parseInt(wrapper.querySelector('#tempStudentSelect').value)); wrapper.remove(); };
-                wrapper.querySelector('#cancelSelectStudent').onclick = () => { resolve(null); wrapper.remove(); };
-            });
-            if (!selectedId) return;
-            let student = students.find(s => s.id === selectedId);
-            if (!student) return;
-            
-            // 获取该学生最后一条记录的积分
-            const { data: lastHistory } = await supabase.from('point_history').select('new_points').eq('student_id', selectedId).order('timestamp', { ascending: false }).limit(1);
-            let currentPoints = lastHistory && lastHistory.length ? lastHistory[0].new_points : student.points;
-            let newPoints = Math.max(0, currentPoints + deltaNum);
-            
-            await supabase.from('point_history').insert({
-                id: Date.now(),
-                student_id: selectedId,
-                delta: deltaNum,
-                new_points: newPoints,
-                reason: reason,
-                timestamp: new Date().toISOString()
-            });
-            await supabase.from('students').update({ points: newPoints }).eq('id', selectedId);
-            showToast(`✅ 已为 ${student.name} 添加积分记录`);
-            await loadStudents();
-            await renderHistoryManagement();
-            if (currentPage === 'manage') renderManage();
         }
         
         async function modifyPoints(sid, delta, reason) {
@@ -623,46 +271,45 @@
             if(!student) return false;
             const oldPoints = student.points;
             const newPoints = Math.max(0, oldPoints + delta);
-            
             await supabase.from('students').update({ points: newPoints }).eq('id', sid);
-            await supabase.from('point_history').insert({
-                id: Date.now(),
-                student_id: sid,
-                delta: delta,
-                new_points: newPoints,
-                reason: reason,
-                timestamp: new Date().toISOString()
-            });
-            
-            const oldStage = getStageByPoints(oldPoints);
-            const newStage = getStageByPoints(newPoints);
-            if(oldStage.name !== newStage.name) showUpgradeModal(student.name, oldStage.name, newStage.name);
+            await supabase.from('point_history').insert({ id: Date.now(), student_id: sid, delta, new_points: newPoints, reason, timestamp: new Date().toISOString() });
+            const oldStageName = getPetStageName(student.pet_id, oldPoints);
+            const newStageName = getPetStageName(student.pet_id, newPoints);
+            if(oldStageName !== newStageName) {
+                document.getElementById("upgradeMsg").innerHTML = `${student.name} 的 ${getPetById(student.pet_id).name} 进阶啦！`;
+                document.getElementById("upgradeDetail").innerHTML = `${oldStageName} → ${newStageName} 🎉`;
+                let m = document.getElementById("upgradeModal"); m.classList.add("show"); 
+                let t = setTimeout(()=>m.classList.remove("show"),2500); 
+                document.getElementById("closeModalBtn").onclick = ()=>{ m.classList.remove("show"); clearTimeout(t); };
+            }
+            await loadStudents();
             return true;
         }
         
-        async function customPointsHandler(sid, isAdd) {
-            if(!checkAdminAndToast("自定义积分")) return;
-            let msg = isAdd ? "请输入增加积分数值（正整数）" : "请输入减少积分数值（正整数）";
-            let val = prompt(msg, "10");
-            if(val === null) return;
-            let num = parseInt(val);
-            if(isNaN(num) || num <= 0) { alert("请输入有效的正整数"); return; }
-            let delta = isAdd ? num : -num;
-            await modifyPoints(sid, delta, `自定义${isAdd?'加':'减'}${num}分`);
+        async function changeStudentPet(sid, newPetId) {
+            if(!checkAdminAndToast("更换宠物")) return;
+            await supabase.from('students').update({ pet_id: newPetId }).eq('id', sid);
+            showToast(`已将宠物更换为 ${getPetById(newPetId).name}`);
+            await loadStudents();
         }
         
-        function updateRankingBoard() {
-            let rankDiv = document.getElementById("rankListContainer");
-            if(!rankDiv) return;
-            let allRank = [...students].sort((a,b)=>b.points - a.points);
-            let html = `<table class="rank-table"><thead><tr><th>#</th><th>姓名</th><th>班级</th><th>积分</th><th>段位</th></tr></thead><tbody>`;
-            for(let i=0;i<allRank.length;i++){
-                let stu=allRank[i];
-                let stage=getStageByPoints(stu.points);
-                html+=`<tr><td>${i+1}</td><td>${escapeHtml(stu.name)}</td><td>${escapeHtml(stu.class_name)}</td><td>${stu.points}</td><td>${stage.name}</td></tr>`;
-            }
-            html+=`</tbody></table>`;
-            rankDiv.innerHTML = html;
+        function openPetSelector(sid) {
+            currentSelectingStudentId = sid;
+            const grid = document.getElementById("petSelectorGrid");
+            grid.innerHTML = PETS_LIB.map(pet => `
+                <div class="pet-option-card" data-pet-id="${pet.id}">
+                    <div class="pet-option-emoji">${pet.stages[0]}</div>
+                    <div class="pet-option-name">${pet.name}</div>
+                </div>
+            `).join('');
+            document.getElementById("petSelectorModal").classList.add("show");
+            grid.onclick = (e) => {
+                const card = e.target.closest('.pet-option-card');
+                if(card && card.dataset.petId) {
+                    changeStudentPet(currentSelectingStudentId, card.dataset.petId);
+                    document.getElementById("petSelectorModal").classList.remove("show");
+                }
+            };
         }
         
         function renderHome() {
@@ -670,22 +317,32 @@
             let classVal = document.getElementById("classFilter")?.value || "全部班级";
             let filtered = students.filter(s => (classVal === "全部班级" || s.class_name === classVal) && (search === "" || s.name.toLowerCase().includes(search)));
             let container = document.getElementById("petCardsContainer");
-            if(filtered.length === 0) { container.innerHTML = "<div class='card' style='text-align:center;'>🐣 暂无匹配学生</div>"; }
+            if(filtered.length === 0) container.innerHTML = "<div class='card' style='text-align:center;'>🐣 暂无匹配学生</div>";
             else {
-                container.innerHTML = filtered.map(s => { 
-                    let st = getStageByPoints(s.points);
-                    let prog = getProgressPercent(s.points);
-                    let need = nextStageNeed(s.points);
+                container.innerHTML = filtered.map(s => {
+                    const petId = s.pet_id || "egg";
+                    const currentIcon = getPetIconByPoints(petId, s.points);
+                    const stageName = getPetStageName(petId, s.points);
+                    let prog = 0, need = 0;
+                    let currentMin = 0, nextMin = 100;
+                    for(let i=0; i<customStages.length; i++) {
+                        if(s.points >= customStages[i].min) currentMin = customStages[i].min;
+                        if(s.points < customStages[i].min) { nextMin = customStages[i].min; break; }
+                    }
+                    let range = nextMin - currentMin;
+                    if(range>0) prog = Math.min(100, Math.floor(((s.points - currentMin) / range) * 100));
+                    need = Math.max(0, nextMin - s.points);
                     return `<div class="pet-card" data-sid="${s.id}">
                         <div class="history-icon" data-sid="${s.id}">📜 记录</div>
                         <div class="student-name">${escapeHtml(s.name)} <span class="class-badge">${escapeHtml(s.class_name)}</span></div>
                         <div class="pet-area">
-                            <div class="pet-emoji">${st.icon}</div>
-                            <div class="pet-rank">${st.name}</div>
+                            <div class="pet-emoji">${currentIcon}</div>
+                            <div class="pet-rank">${stageName}</div>
                             <div class="progress-bar-bg"><div class="progress-fill" style="width:${prog}%"></div></div>
                             <div>⭐ 积分: <span class="points">${s.points}</span></div>
-                            <div style="font-size:0.7rem;">📈 距下一阶: <span class="next-need">${need===0?"已是至尊":need+"分"}</span></div>
+                            <div style="font-size:0.7rem;">📈 距下一阶: ${need===0?"已是巅峰":need+"分"}</div>
                         </div>
+                        <div style="text-align: center; margin: 8px 0 4px;"><button class="change-pet-btn" data-sid="${s.id}">🐾 换宠物</button></div>
                         <div class="score-actions">
                             <button class="score-btn mod-btn" data-delta="1">+1</button>
                             <button class="score-btn mod-btn" data-delta="5">+5</button>
@@ -698,31 +355,49 @@
                 }).join("");
             }
             updateRankingBoard();
-            
-            let cf = document.getElementById("classFilter");
             let classSet = new Set(students.map(s => s.class_name));
             let classList = Array.from(classSet).filter(c => c && c !== "待分配班级");
             if(classList.length === 0) classList = ["三年1班","三年2班"];
             if(!classList.includes("待分配班级")) classList.push("待分配班级");
+            let cf = document.getElementById("classFilter");
             let curVal = cf.value;
             cf.innerHTML = `<option value="全部班级">🏫 全部班级</option>` + classList.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
             if(classList.includes(curVal)) cf.value = curVal; else cf.value = "全部班级";
             
-            container.onclick = (e) => {
+            container.onclick = async (e) => {
                 let btn = e.target.closest('.mod-btn');
                 if(btn && btn.dataset.delta) {
                     let delta = parseInt(btn.dataset.delta);
                     let petCard = btn.closest('.pet-card');
-                    if(petCard) modifyPoints(parseInt(petCard.dataset.sid), delta, `手动${delta>0?'加':'减'}分`);
+                    if(petCard) await modifyPoints(parseInt(petCard.dataset.sid), delta, `手动${delta>0?'加':'减'}分`);
                     return;
                 }
                 let customAdd = e.target.closest('.custom-add');
-                if(customAdd) { customPointsHandler(parseInt(customAdd.dataset.sid), true); return; }
+                if(customAdd) { let val = prompt("增加积分:", "10"); if(val && !isNaN(parseInt(val))) await modifyPoints(parseInt(customAdd.dataset.sid), parseInt(val), `自定义加${val}分`); return; }
                 let customSub = e.target.closest('.custom-sub');
-                if(customSub) { customPointsHandler(parseInt(customSub.dataset.sid), false); return; }
+                if(customSub) { let val = prompt("减少积分:", "10"); if(val && !isNaN(parseInt(val))) await modifyPoints(parseInt(customSub.dataset.sid), -parseInt(val), `自定义减${val}分`); return; }
                 let historyBtn = e.target.closest('.history-icon');
-                if(historyBtn) { showHistoryForStudent(parseInt(historyBtn.dataset.sid)); }
+                if(historyBtn) showHistoryForStudent(parseInt(historyBtn.dataset.sid));
+                let changePetBtn = e.target.closest('.change-pet-btn');
+                if(changePetBtn && changePetBtn.dataset.sid) {
+                    openPetSelector(parseInt(changePetBtn.dataset.sid));
+                }
             };
+        }
+        
+        function updateRankingBoard() {
+            let rankDiv = document.getElementById("rankListContainer");
+            if(!rankDiv) return;
+            let allRank = [...students].sort((a,b)=>b.points - a.points);
+            let html = `<table class="rank-table"><thead><tr><th>#</th><th>姓名</th><th>班级</th><th>宠物</th><th>积分</th><th>段位</th></tr></thead><tbody>`;
+            for(let i=0;i<allRank.length;i++){
+                let stu=allRank[i];
+                let pet = getPetById(stu.pet_id);
+                let stageName = getPetStageName(stu.pet_id, stu.points);
+                html+=`<tr><td>${i+1}</td><td>${escapeHtml(stu.name)}</td><td>${escapeHtml(stu.class_name)}</td><td>${pet.name}</td><td>${stu.points}</td><td>${stageName}</td></tr>`;
+            }
+            html+=`</tbody></td>`;
+            rankDiv.innerHTML = html;
         }
         
         async function showHistoryForStudent(sid) {
@@ -751,21 +426,21 @@
                 let time = new Date(h.timestamp).toLocaleString();
                 let deltaStr = h.delta>0 ? `+${h.delta}` : `${h.delta}`;
                 let color = h.delta>0 ? "#2e7d32" : "#c62828";
-                return `<li style="display:flex; justify-content:space-between;"><span>${time}</span><span style="color:${color}; font-weight:bold;">${deltaStr} 分</span><span>→ ${h.new_points} 分</span><span style="font-size:0.7rem;">${h.reason}</span></li>`;
+                return `<li><span>${time}</span> <span style="color:${color}; font-weight:bold;">${deltaStr} 分</span> <span>→ ${h.new_points} 分</span> <span>${h.reason}</span></li>`;
             }).join("") : "<li>暂无积分变动记录</li>";
-            let modal = document.getElementById("historyModal");
             document.getElementById("historyStudentName").innerHTML = `${escapeHtml(student.name)} 的积分记录`;
             document.getElementById("dailySummaryContainer").innerHTML = dailyHtml;
             document.getElementById("historyList").innerHTML = detailHtml;
-            modal.classList.add("show");
-            document.getElementById("closeHistoryBtn").onclick = () => modal.classList.remove("show");
+            document.getElementById("historyModal").classList.add("show");
+            document.getElementById("closeHistoryBtn").onclick = () => document.getElementById("historyModal").classList.remove("show");
         }
         
-        function renderLottery() {
+        // 抽奖部分完整保留
+        async function renderLottery() {
             let classSet = new Set(students.map(s => s.class_name));
             let classList = Array.from(classSet);
             let classFilter = document.getElementById("lotteryClassFilter");
-            let curClass = classFilter.value;
+            let curClass = classFilter?.value || "all";
             classFilter.innerHTML = `<option value="all">🏫 全部班级</option>` + classList.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
             if(curClass && (curClass === "all" || classList.includes(curClass))) classFilter.value = curClass; else classFilter.value = "all";
             let search = document.getElementById("lotterySearchName")?.value.toLowerCase() || "";
@@ -781,12 +456,7 @@
             grid.innerHTML = displayPrizes.map((p,idx) => `<div class="grid-item" data-idx="${idx}">${p.name}<br><small>${p.points>0?`+${p.points}分`:p.points===0?"0分":p.points+"分"}</small></div>`).join("");
             let configDiv = document.getElementById("prizeConfigList");
             if(isAdmin) {
-                configDiv.innerHTML = lotteryPrizes.map((p,idx) => `<div class="prize-row">
-                    <input type="text" value="${escapeHtml(p.name)}" data-idx="${idx}" data-field="name" style="width:110px;">
-                    <input type="number" value="${p.points}" data-idx="${idx}" data-field="points" style="width:70px;">分
-                    <input type="number" step="1" value="${p.prob}" data-idx="${idx}" data-field="prob" style="width:70px;">%
-                    <button class="del-prize-btn" data-idx="${idx}">🗑️</button>
-                </div>`).join("");
+                configDiv.innerHTML = lotteryPrizes.map((p,idx) => `<div class="prize-row"><input type="text" value="${escapeHtml(p.name)}" data-idx="${idx}" data-field="name" style="width:110px;"><input type="number" value="${p.points}" data-idx="${idx}" data-field="points" style="width:70px;">分<input type="number" step="1" value="${p.prob}" data-idx="${idx}" data-field="prob" style="width:70px;">%<button class="del-prize-btn" data-idx="${idx}">🗑️</button></div>`).join("");
                 configDiv.onchange = async (e) => {
                     let target = e.target;
                     if(target.dataset.field) {
@@ -809,7 +479,7 @@
                     }
                 };
             } else {
-                configDiv.innerHTML = `<div style="text-align:center; color:#b45f1b;">🔒 需要登录管理员才能修改奖品配置</div>`;
+                configDiv.innerHTML = `<div style="text-align:center;">🔒 需要登录管理员</div>`;
             }
             document.getElementById("costPerDraw").value = costPerDraw;
         }
@@ -819,15 +489,9 @@
             let pointsSpan = document.getElementById("selectedPoints");
             if(selectedStudentId) {
                 let stu = students.find(s => s.id === selectedStudentId);
-                if(stu) {
-                    infoDiv.innerHTML = `🎉 当前选中: ${escapeHtml(stu.name)} (${stu.class_name})  |  🥚 ${getStageByPoints(stu.points).name} | 积分: ${stu.points}`;
-                    pointsSpan.innerText = stu.points;
-                    return;
-                }
+                if(stu) { infoDiv.innerHTML = `🎉 当前选中: ${escapeHtml(stu.name)} (${stu.class_name})  |  🥚 ${getPetStageName(stu.pet_id, stu.points)} | 积分: ${stu.points}`; pointsSpan.innerText = stu.points; return; }
             }
-            infoDiv.innerHTML = `⚡ 未选择学生，请点击上方学生头像选中`;
-            pointsSpan.innerText = "0";
-            selectedStudentId = null;
+            infoDiv.innerHTML = `⚡ 未选择学生，请点击上方学生头像选中`; pointsSpan.innerText = "0"; selectedStudentId = null;
         }
         
         async function doLottery() {
@@ -868,99 +532,9 @@
             }
         }
         
-        // 学生管理表格（确保输入框可编辑）
-        async function renderStudentTable() {
-            if (!isAdmin) { document.getElementById("manageTableContainer").innerHTML = "<div>🔒 请登录管理员后管理学生</div>"; return; }
-            let searchName = document.getElementById("manageSearchName")?.value.toLowerCase() || "";
-            let searchClass = document.getElementById("manageSearchClass")?.value || "all";
-            let classSet = new Set(students.map(s => s.class_name));
-            let classList = Array.from(classSet).filter(c => c && c !== "待分配班级");
-            if (classList.length === 0) classList = ["三年1班", "三年2班"];
-            if (!classList.includes("待分配班级")) classList.push("待分配班级");
-            let filtered = students.filter(s => (searchClass === "all" || s.class_name === searchClass) && (searchName === "" || s.name.toLowerCase().includes(searchName)));
-            let html = `<div style="margin-bottom:12px;"><button id="batchDeleteStudentBtn" class="danger-btn">🗑️ 批量删除所选学生</button></div>
-            <table class="manage-table">
-                <thead><tr><th><input type="checkbox" id="selectAllStudentCheckbox"></th><th>ID</th><th>姓名</th><th>班级</th><th>积分</th><th>操作</th></tr></thead>
-                <tbody>`;
-            for (let s of filtered) {
-                html += `<tr data-sid="${s.id}">
-                    <td><input type="checkbox" class="student-batch-cb" value="${s.id}"></td>
-                    <td>${s.id}</td>
-                    <td><input type="text" class="edit-name" value="${escapeHtml(s.name)}" style="padding:6px 10px; border-radius:20px; border:1px solid #ffce94;"></td>
-                    <td><select class="edit-class" style="padding:6px 10px; border-radius:20px; border:1px solid #ffce94;">${classList.map(c => `<option value="${escapeHtml(c)}" ${c === s.class_name ? "selected" : ""}>${escapeHtml(c)}</option>`).join('')}</select></td>
-                    <td><input type="number" class="edit-points" value="${s.points}" style="padding:6px 10px; border-radius:20px; border:1px solid #ffce94; width:80px;"></td>
-                    <td><button class="save-student" data-sid="${s.id}">💾保存</button><button class="del-student" data-sid="${s.id}">❌删除</button><button class="history-btn" data-sid="${s.id}">📜 记录</button></td>
-                </tr>`;
-            }
-            html += `</tbody></table>`;
-            document.getElementById("manageTableContainer").innerHTML = html;
-            
-            // 保存学生
-            document.querySelectorAll('.save-student').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    let tr = btn.closest('tr');
-                    let sid = parseInt(tr.dataset.sid);
-                    let newName = tr.querySelector('.edit-name').value;
-                    let newClass = tr.querySelector('.edit-class').value;
-                    let newPoints = parseInt(tr.querySelector('.edit-points').value);
-                    let stu = students.find(s => s.id === sid);
-                    if (stu) {
-                        let oldPoints = stu.points;
-                        await supabase.from('students').update({ name: newName, class_name: newClass, points: Math.max(0, newPoints) }).eq('id', sid);
-                        if (newPoints !== oldPoints) {
-                            let delta = newPoints - oldPoints;
-                            await supabase.from('point_history').insert({ id: Date.now(), student_id: sid, delta: delta, new_points: newPoints, reason: "管理员修改", timestamp: new Date().toISOString() });
-                            let oldSt = getStageByPoints(oldPoints), newSt = getStageByPoints(newPoints);
-                            if (oldSt.name !== newSt.name) showUpgradeModal(stu.name, oldSt.name, newSt.name);
-                        }
-                        showToast(`✅ 已保存 ${newName}`);
-                        await loadStudents();
-                        renderManage();
-                    }
-                });
-            });
-            // 删除单个学生
-            document.querySelectorAll('.del-student').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    let sid = parseInt(btn.dataset.sid);
-                    if (confirm("确认删除该学生？")) {
-                        await supabase.from('point_history').delete().eq('student_id', sid);
-                        await supabase.from('students').delete().eq('id', sid);
-                        if (selectedStudentId === sid) selectedStudentId = null;
-                        showToast("🗑️ 学生已删除");
-                        await loadStudents();
-                        renderManage();
-                    }
-                });
-            });
-            // 查看历史
-            document.querySelectorAll('.history-btn').forEach(btn => {
-                btn.addEventListener('click', () => { showHistoryForStudent(parseInt(btn.dataset.sid)); });
-            });
-            // 批量删除学生
-            const selectAllStudent = document.getElementById("selectAllStudentCheckbox");
-            if (selectAllStudent) selectAllStudent.addEventListener('change', (e) => { document.querySelectorAll('.student-batch-cb').forEach(cb => cb.checked = e.target.checked); });
-            const batchDeleteBtn = document.getElementById("batchDeleteStudentBtn");
-            if (batchDeleteBtn) {
-                batchDeleteBtn.onclick = async () => {
-                    let checked = Array.from(document.querySelectorAll('.student-batch-cb:checked')).map(cb => parseInt(cb.value));
-                    if (checked.length) {
-                        if (!confirm(`确认删除 ${checked.length} 名学生？`)) return;
-                        for (let sid of checked) {
-                            await supabase.from('point_history').delete().eq('student_id', sid);
-                            await supabase.from('students').delete().eq('id', sid);
-                            if (selectedStudentId === sid) selectedStudentId = null;
-                        }
-                        showToast(`已删除 ${checked.length} 名学生`);
-                        await loadStudents();
-                        renderManage();
-                    } else alert("未选择学生");
-                };
-            }
-        }
-        
+        // 管理页面（包含宠物编辑）
         async function renderManage() {
-            if (!isAdmin) {
+            if(!isAdmin) {
                 document.getElementById("classListContainer").innerHTML = "<div style='padding:20px; text-align:center;'>🔒 请登录管理员账号后访问班级管理</div>";
                 document.getElementById("manageTableContainer").innerHTML = "<div style='padding:20px; text-align:center;'>🔒 请登录管理员账号后管理学生信息</div>";
                 document.getElementById("stagesConfigContainer").innerHTML = "<div style='padding:20px; text-align:center;'>🔒 请登录管理员账号后修改段位规则</div>";
@@ -992,9 +566,216 @@
             manageSearchClassSelect.innerHTML = `<option value="all">所有班级</option>` + classList.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
             if(currentSearchClass && (currentSearchClass === "all" || classList.includes(currentSearchClass))) manageSearchClassSelect.value = currentSearchClass;
             else manageSearchClassSelect.value = "all";
-            await renderStudentTable();
+            let searchName = document.getElementById("manageSearchName")?.value.toLowerCase() || "";
+            let searchClass = document.getElementById("manageSearchClass")?.value || "all";
+            let filtered = students.filter(s => (searchClass === "all" || s.class_name === searchClass) && (searchName === "" || s.name.toLowerCase().includes(searchName)));
+            let html = `<div style="margin-bottom:12px;"><button id="batchDeleteStudentBtn" class="danger-btn">🗑️ 批量删除所选学生</button></div>
+            <table class="manage-table"><thead><tr><th><input type="checkbox" id="selectAllStudentCheckbox"></th><th>姓名</th><th>班级</th><th>宠物</th><th>积分</th><th>操作</th></tr></thead><tbody>`;
+            for(let s of filtered){
+                html += `<tr data-sid="${s.id}">
+                    <td><input type="checkbox" class="student-batch-cb" value="${s.id}"></td>
+                    <td><input type="text" class="edit-name" value="${escapeHtml(s.name)}"></td>
+                    <td><select class="edit-class">${classList.map(c=>`<option ${c===s.class_name?'selected':''}>${escapeHtml(c)}</option>`).join('')}</select></td>
+                    <td><select class="edit-pet">${PETS_LIB.map(p=>`<option value="${p.id}" ${(s.pet_id||'egg')===p.id?'selected':''}>${p.name}</option>`).join('')}</select></td>
+                    <td><input type="number" class="edit-points" value="${s.points}"></td>
+                    <td><button class="save-student-manage">💾保存</button><button class="del-student-manage">❌删除</button><button class="history-btn-manage" data-sid="${s.id}">📜记录</button></td>
+                </tr>`;
+            }
+            html += `</tbody></table>`;
+            document.getElementById("manageTableContainer").innerHTML = html;
+            // 保存学生
+            document.querySelectorAll('.save-student-manage').forEach(btn=>{
+                btn.addEventListener('click', async (e)=>{
+                    let tr = btn.closest('tr');
+                    let sid = parseInt(tr.dataset.sid);
+                    let name = tr.querySelector('.edit-name').value;
+                    let className = tr.querySelector('.edit-class').value;
+                    let petId = tr.querySelector('.edit-pet').value;
+                    let points = parseInt(tr.querySelector('.edit-points').value);
+                    await supabase.from('students').update({ name, class_name: className, pet_id: petId, points: Math.max(0,points) }).eq('id', sid);
+                    showToast("保存成功");
+                    await loadStudents();
+                });
+            });
+            document.querySelectorAll('.del-student-manage').forEach(btn=>{
+                btn.addEventListener('click', async (e)=>{
+                    let sid = parseInt(btn.closest('tr').dataset.sid);
+                    if(confirm("删除学生？")) {
+                        await supabase.from('point_history').delete().eq('student_id', sid);
+                        await supabase.from('students').delete().eq('id', sid);
+                        if(selectedStudentId === sid) selectedStudentId = null;
+                        showToast("学生已删除");
+                        await loadStudents();
+                    }
+                });
+            });
+            document.querySelectorAll('.history-btn-manage').forEach(btn=>{
+                btn.addEventListener('click', ()=>{
+                    showHistoryForStudent(parseInt(btn.dataset.sid));
+                });
+            });
+            // 批量删除学生
+            const selectAllStudent = document.getElementById("selectAllStudentCheckbox");
+            if(selectAllStudent) selectAllStudent.addEventListener('change', (e) => { document.querySelectorAll('.student-batch-cb').forEach(cb => cb.checked = e.target.checked); });
+            const batchDeleteBtn = document.getElementById("batchDeleteStudentBtn");
+            if(batchDeleteBtn) {
+                batchDeleteBtn.onclick = async () => {
+                    let checked = Array.from(document.querySelectorAll('.student-batch-cb:checked')).map(cb => parseInt(cb.value));
+                    if(checked.length) {
+                        if(!confirm(`确认删除 ${checked.length} 名学生？`)) return;
+                        for(let sid of checked) {
+                            await supabase.from('point_history').delete().eq('student_id', sid);
+                            await supabase.from('students').delete().eq('id', sid);
+                            if(selectedStudentId === sid) selectedStudentId = null;
+                        }
+                        showToast(`已删除 ${checked.length} 名学生`);
+                        await loadStudents();
+                    } else alert("未选择学生");
+                };
+            }
+            // 积分记录管理部分（简化但完整）
             await renderHistoryManagement();
             renderStageConfigEditor();
+        }
+        
+        async function renderHistoryManagement() {
+            if(!isAdmin) {
+                document.getElementById("historyTableContainer").innerHTML = "<div>🔒 请登录管理员后管理积分记录</div>";
+                return;
+            }
+            const { data: records } = await supabase.from('point_history').select('*').order('timestamp', { ascending: false });
+            const studentMap = new Map(students.map(s => [s.id, s]));
+            const enriched = (records || []).map(r => ({ ...r, student_name: studentMap.get(r.student_id)?.name || '未知', student_class: studentMap.get(r.student_id)?.class_name || '未知' }));
+            let searchKeyword = document.getElementById("historySearchStudent")?.value.toLowerCase() || "";
+            let filtered = searchKeyword ? enriched.filter(r => r.student_name.toLowerCase().includes(searchKeyword)) : enriched;
+            let html = `<div><label><input type="checkbox" id="selectAllHistoryCheckbox"> 全选</label></div>
+            <table class="history-table"><thead><tr><th><input type="checkbox" id="selectAllHistoryHeader"></th><th>学生</th><th>班级</th><th>变更分</th><th>变更后积分</th><th>原因</th><th>时间</th><th>操作</th></tr></thead><tbody>`;
+            for(let rec of filtered) {
+                let timeStr = new Date(rec.timestamp).toLocaleString();
+                html += `<tr data-id="${rec.id}">
+                    <td><input type="checkbox" class="history-checkbox" value="${rec.id}"></td>
+                    <td>${escapeHtml(rec.student_name)}</td>
+                    <td>${escapeHtml(rec.student_class)}</td>
+                    <td><input type="number" class="edit-delta" value="${rec.delta}" style="width:80px;"></td>
+                    <td>${rec.new_points}</td>
+                    <td><input type="text" class="edit-reason" value="${escapeHtml(rec.reason)}" style="width:130px;"></td>
+                    <td>${timeStr}</td>
+                    <td><button class="save-history-btn" data-id="${rec.id}">💾保存</button><button class="del-single-history" data-id="${rec.id}">❌删除</button></td>
+                </tr>`;
+            }
+            html += `</tbody></table>`;
+            document.getElementById("historyTableContainer").innerHTML = html;
+            // 保存编辑
+            document.querySelectorAll('.save-history-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    if(!checkAdminAndToast("修改积分记录")) return;
+                    let id = parseInt(btn.dataset.id);
+                    let row = btn.closest('tr');
+                    let newDelta = parseInt(row.querySelector('.edit-delta').value);
+                    let newReason = row.querySelector('.edit-reason').value;
+                    if(isNaN(newDelta)) { alert("变更分须为数字"); return; }
+                    let originalRec = enriched.find(r => r.id === id);
+                    if(!originalRec) return;
+                    const { data: allHistory } = await supabase.from('point_history').select('*').eq('student_id', originalRec.student_id).order('timestamp', { ascending: true });
+                    if(allHistory) {
+                        let running = 0;
+                        for(let h of allHistory) {
+                            if(h.id === id) {
+                                running = Math.max(0, running + newDelta);
+                                await supabase.from('point_history').update({ delta: newDelta, new_points: running, reason: newReason }).eq('id', id);
+                            } else {
+                                running = Math.max(0, running + h.delta);
+                                if(h.id !== id) await supabase.from('point_history').update({ new_points: running }).eq('id', h.id);
+                            }
+                        }
+                        await supabase.from('students').update({ points: running }).eq('id', originalRec.student_id);
+                    }
+                    showToast("记录已更新");
+                    await loadStudents();
+                    await renderHistoryManagement();
+                    if(currentPage === 'manage') renderManage();
+                });
+            });
+            document.querySelectorAll('.del-single-history').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    if(!checkAdminAndToast("删除记录")) return;
+                    let id = parseInt(btn.dataset.id);
+                    if(confirm("删除该记录不会影响学生当前积分，确定删除吗？")) {
+                        await supabase.from('point_history').delete().eq('id', id);
+                        showToast("已删除记录");
+                        await renderHistoryManagement();
+                        if(currentPage === 'manage') renderManage();
+                    }
+                });
+            });
+            // 全选逻辑
+            const selectAllHeader = document.getElementById("selectAllHistoryHeader");
+            const selectAllDiv = document.getElementById("selectAllHistoryCheckbox");
+            const syncCheckboxes = () => {
+                let allCbs = document.querySelectorAll('.history-checkbox');
+                let checkedAll = allCbs.length === document.querySelectorAll('.history-checkbox:checked').length;
+                if(selectAllHeader) selectAllHeader.checked = checkedAll;
+                if(selectAllDiv) selectAllDiv.checked = checkedAll;
+            };
+            if(selectAllHeader) selectAllHeader.addEventListener('change', (e) => { document.querySelectorAll('.history-checkbox').forEach(cb => cb.checked = e.target.checked); });
+            if(selectAllDiv) selectAllDiv.addEventListener('change', (e) => { document.querySelectorAll('.history-checkbox').forEach(cb => cb.checked = e.target.checked); });
+            document.querySelectorAll('.history-checkbox').forEach(cb => cb.addEventListener('change', syncCheckboxes));
+        }
+        
+        async function cleanupOldHistoryOnly() {
+            if(!isAdmin) return;
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            const { data: oldRecords, error } = await supabase.from('point_history').select('id').lt('timestamp', sevenDaysAgo.toISOString());
+            if(error) return;
+            if(oldRecords.length) {
+                await supabase.from('point_history').delete().lt('timestamp', sevenDaysAgo.toISOString());
+                showToast(`🧹 已清理 ${oldRecords.length} 条超过7天的积分记录`);
+                await renderHistoryManagement();
+                if(currentPage === 'manage') renderManage();
+            }
+        }
+        
+        async function batchDeleteHistoryRecords() {
+            if(!checkAdminAndToast("批量删除记录")) return;
+            let checkedIds = Array.from(document.querySelectorAll('.history-checkbox:checked')).map(cb => parseInt(cb.value));
+            if(checkedIds.length === 0) { alert("请至少选择一条记录"); return; }
+            if(!confirm(`确认删除 ${checkedIds.length} 条积分记录？删除后不影响学生当前积分，确定吗？`)) return;
+            await supabase.from('point_history').delete().in('id', checkedIds);
+            showToast(`已删除 ${checkedIds.length} 条记录`);
+            await renderHistoryManagement();
+            if(currentPage === 'manage') renderManage();
+        }
+        
+        async function addHistoryRecord() {
+            if(!checkAdminAndToast("新增积分记录")) return;
+            if(students.length === 0) { alert("请先添加学生"); return; }
+            let delta = prompt("请输入积分变动（正数为增加，负数为减少）:", "10");
+            if(delta === null) return;
+            let deltaNum = parseInt(delta);
+            if(isNaN(deltaNum)) { alert("无效数字"); return; }
+            let reason = prompt("请输入变动原因:", "手动新增记录");
+            if(reason === null) reason = "手动新增记录";
+            let studentOptions = students.map(s => `<option value="${s.id}">${escapeHtml(s.name)} (${s.class_name})</option>`).join('');
+            let wrapper = document.createElement('div');
+            wrapper.innerHTML = `<div style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:20px; border-radius:32px; z-index:10000;"><h4>选择学生</h4><select id="tempStudentSelect">${studentOptions}</select><div><button id="confirmSelectStudent">确认</button><button id="cancelSelectStudent">取消</button></div></div>`;
+            document.body.appendChild(wrapper);
+            const selectedId = await new Promise((resolve) => {
+                wrapper.querySelector('#confirmSelectStudent').onclick = () => { resolve(parseInt(wrapper.querySelector('#tempStudentSelect').value)); wrapper.remove(); };
+                wrapper.querySelector('#cancelSelectStudent').onclick = () => { resolve(null); wrapper.remove(); };
+            });
+            if(!selectedId) return;
+            let student = students.find(s => s.id === selectedId);
+            if(!student) return;
+            const { data: lastHistory } = await supabase.from('point_history').select('new_points').eq('student_id', selectedId).order('timestamp', { ascending: false }).limit(1);
+            let currentPoints = lastHistory && lastHistory.length ? lastHistory[0].new_points : student.points;
+            let newPoints = Math.max(0, currentPoints + deltaNum);
+            await supabase.from('point_history').insert({ id: Date.now(), student_id: selectedId, delta: deltaNum, new_points: newPoints, reason, timestamp: new Date().toISOString() });
+            await supabase.from('students').update({ points: newPoints }).eq('id', selectedId);
+            showToast(`✅ 已为 ${student.name} 添加积分记录`);
+            await loadStudents();
+            await renderHistoryManagement();
+            if(currentPage === 'manage') renderManage();
         }
         
         function renderStageConfigEditor() {
@@ -1002,7 +783,6 @@
             let container = document.getElementById("stagesConfigContainer");
             if(container) container.innerHTML = customStages.map((stage, idx) => `<div class="stage-item"><label>${stage.icon} ${stage.name}</label><input type="number" value="${stage.min}" data-idx="${idx}" class="stage-min-input" step="10" min="0"></div>`).join("");
         }
-        
         async function saveStagesConfig() {
             if(!checkAdminAndToast("保存段位规则")) return;
             let inputs = document.querySelectorAll("#stagesConfigContainer .stage-min-input");
@@ -1013,119 +793,20 @@
             await supabase.from('app_config').upsert({ key: 'custom_stages', value: customStages }, { onConflict: 'key' });
             showToast("✅ 段位规则已保存");
         }
-        
         async function resetStagesToDefault() {
             if(!checkAdminAndToast("重置段位规则")) return;
-            customStages = [
-                { name:"蛋仔萌新", icon:"🥚", min:0 }, { name:"初学蛋仔", icon:"🐣", min:100 },
-                { name:"活力蛋仔", icon:"🐥", min:200 }, { name:"进阶蛋仔", icon:"🐤", min:300 },
-                { name:"精英蛋仔", icon:"🐔", min:400 }, { name:"闪耀蛋仔", icon:"⭐🐤", min:500 },
-                { name:"璀璨蛋仔", icon:"✨🐣", min:600 }, { name:"传奇蛋仔", icon:"🔥🐥", min:700 },
-                { name:"巅峰蛋仔", icon:"🌈🐔", min:800 }, { name:"至尊蛋神", icon:"👑🐉", min:900 }
-            ];
+            customStages = [{ name:"蛋仔萌新", icon:"🥚", min:0 },{ name:"初学蛋仔", icon:"🐣", min:100 },{ name:"活力蛋仔", icon:"🐥", min:200 },{ name:"进阶蛋仔", icon:"🐤", min:300 },{ name:"精英蛋仔", icon:"🐔", min:400 },{ name:"闪耀蛋仔", icon:"⭐🐤", min:500 },{ name:"璀璨蛋仔", icon:"✨🐣", min:600 },{ name:"传奇蛋仔", icon:"🔥🐥", min:700 },{ name:"巅峰蛋仔", icon:"🌈🐔", min:800 },{ name:"至尊蛋神", icon:"👑🐉", min:900 }];
             await supabase.from('app_config').upsert({ key: 'custom_stages', value: customStages }, { onConflict: 'key' });
             showToast("🔄 已恢复默认段位规则");
         }
         
-        function exportFullBackup() {
-            if(!checkAdminAndToast("导出备份")) return;
-            const backupData = { students, lotteryPrizes, costPerDraw, customStages };
-            const blob = new Blob([JSON.stringify(backupData, null, 2)], {type: "application/json"});
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `蛋仔系统完整备份_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.json`;
-            link.click();
-            URL.revokeObjectURL(link.href);
-            showToast("📦 完整备份已导出");
-        }
-        
-        async function importFullBackup(file) {
-            if(!checkAdminAndToast("导入备份")) return;
-            const reader = new FileReader();
-            reader.onload = async function(ev) {
-                try {
-                    const data = JSON.parse(ev.target.result);
-                    if(data.students && data.students.length) {
-                        await supabase.from('students').delete().neq('id', 0);
-                        for(let stu of data.students) await supabase.from('students').insert({ id: stu.id, name: stu.name, class_name: stu.class_name || stu.className, points: stu.points });
-                    }
-                    if(data.lotteryPrizes) await supabase.from('app_config').upsert({ key: 'lottery_prizes', value: data.lotteryPrizes }, { onConflict: 'key' });
-                    if(data.costPerDraw !== undefined) await supabase.from('app_config').upsert({ key: 'cost_per_draw', value: data.costPerDraw }, { onConflict: 'key' });
-                    if(data.customStages) await supabase.from('app_config').upsert({ key: 'custom_stages', value: data.customStages }, { onConflict: 'key' });
-                    showToast(`✅ 备份恢复成功！`);
-                    await loadStudents();
-                    await loadConfig();
-                } catch(e) { alert("备份文件解析失败"); }
-            };
-            reader.readAsText(file, "UTF-8");
-        }
-        
-        function exportToCSV() {
-            if(!checkAdminAndToast("导出CSV")) return;
-            const headers = ["姓名", "班级", "积分"];
-            const rows = students.map(s => [s.name, s.class_name, s.points]);
-            const escapeCell = (cell) => { if(cell===undefined||cell===null) return ''; const str = String(cell); if(str.includes(',')||str.includes('"')||str.includes('\n')) return '"'+str.replace(/"/g, '""')+'"'; return str; };
-            const csvLines = [headers.map(escapeCell).join(',')];
-            rows.forEach(row=>csvLines.push(row.map(escapeCell).join(',')));
-            const blob = new Blob(["\uFEFF"+csvLines.join('\n')], {type:"text/csv;charset=utf-8;"});
-            const link=document.createElement("a"); link.href=URL.createObjectURL(blob); link.download=`学生简表_${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.csv`; link.click(); URL.revokeObjectURL(link.href);
-            showToast("📎 导出CSV成功！");
-        }
-        
-        async function importFromCSV(file) {
-            if(!checkAdminAndToast("导入CSV")) return;
-            const reader = new FileReader();
-            reader.onload = async function(evt) {
-                let text = evt.target.result;
-                if(text.charCodeAt(0)===0xFEFF) text=text.slice(1);
-                const lines = text.split(/\r?\n/).filter(l=>l.trim().length>0);
-                if(lines.length<2){ alert("文件内容为空"); return; }
-                const parseCSVLine = (line)=>{ let res=[], i=0, inQuote=false, cur=''; while(i<line.length){ let ch=line[i]; if(ch==='"'){ if(inQuote && line[i+1]==='"'){ cur+='"'; i++; }else{ inQuote=!inQuote; } }else if(ch===',' && !inQuote){ res.push(cur); cur=''; }else{ cur+=ch; } i++; } res.push(cur); return res.map(f=>f.trim()); };
-                const headers = parseCSVLine(lines[0]);
-                let nameIdx=0,classIdx=1,pointsIdx=2;
-                for(let i=0;i<headers.length;i++){ let h=headers[i].toLowerCase(); if(h.includes('姓名')||h==='name') nameIdx=i; else if(h.includes('班级')||h==='class') classIdx=i; else if(h.includes('积分')||h==='points') pointsIdx=i; }
-                const newStudents=[];
-                for(let i=1;i<lines.length;i++){ let line=lines[i]; if(!line.trim()) continue; let fields=parseCSVLine(line); if(fields.length<=Math.max(nameIdx,classIdx,pointsIdx)) continue;
-                    let name=fields[nameIdx]?.trim(), className=fields[classIdx]?.trim(), points=parseInt(fields[pointsIdx]); if(isNaN(points)) points=0;
-                    if(name) newStudents.push({ id: Date.now() + i, name, class_name: className, points });
-                }
-                if(newStudents.length===0){ alert("未检测到有效学生"); return; }
-                await supabase.from('students').delete().neq('id', 0);
-                for(let stu of newStudents) await supabase.from('students').insert(stu);
-                showToast(`📂 导入成功！共 ${newStudents.length} 名学生`);
-                await loadStudents();
-            };
-            reader.readAsText(file, "UTF-8");
-        }
-        
-        async function clearAllData() {
-            if(!checkAdminAndToast("清空所有数据")) return;
-            if(confirm("⚠️ 清空所有学生数据不可恢复")) {
-                await supabase.from('students').delete().neq('id', 0);
-                await supabase.from('point_history').delete().neq('id', 0);
-                showToast("🧹 所有学生数据已清空");
-                await loadStudents();
-            }
-        }
-        
-        async function addClass() {
-            if(!checkAdminAndToast("添加班级")) return;
-            let nc = document.getElementById("newClassName").value.trim();
-            if(!nc){ alert("请输入班级名称"); return; }
-            showToast(`班级 ${nc} 已就绪`);
-            document.getElementById("newClassName").value = "";
-        }
-        
-        async function inlineAddStudent() {
-            if(!checkAdminAndToast("添加学生")) return;
-            let name = document.getElementById("newStudentName").value.trim();
-            let cls = document.getElementById("newStudentClassSelect")?.value;
-            if(!name){ alert("请输入学生姓名"); return; }
-            if(!cls) cls = "默认班级";
-            await supabase.from('students').insert({ id: Date.now(), name: name, class_name: cls, points: 0 });
-            document.getElementById("newStudentName").value = "";
-            showToast(`➕ 学生 ${name} 添加成功`);
-        }
+        function exportFullBackup() { /* 完整备份导出 */ }
+        function importFullBackup(file) { /* 导入 */ }
+        function exportToCSV() { /* 导出CSV */ }
+        function importFromCSV(file) { /* 导入CSV */ }
+        async function clearAllData() { if(confirm("⚠️ 清空所有学生数据不可恢复")){ await supabase.from('students').delete().neq('id',0); await supabase.from('point_history').delete().neq('id',0); showToast("清空完成"); await loadStudents(); } }
+        async function addClass() { let nc = document.getElementById("newClassName").value.trim(); if(nc) showToast(`班级 ${nc} 已就绪`); document.getElementById("newClassName").value = ""; }
+        async function inlineAddStudent() { let name = document.getElementById("newStudentName").value.trim(); let cls = document.getElementById("newStudentClassSelect")?.value; if(name){ await supabase.from('students').insert({ id: Date.now(), name, class_name: cls, points: 0, pet_id: "egg" }); document.getElementById("newStudentName").value = ""; showToast(`➕ 学生 ${name} 添加成功`); await loadStudents(); } else alert("请输入姓名"); }
         
         function refreshAll() {
             if(currentPage === "home") renderHome();
@@ -1149,51 +830,36 @@
             });
         });
         
+        document.getElementById("searchName")?.addEventListener("input", ()=>renderHome());
+        document.getElementById("classFilter")?.addEventListener("change", ()=>renderHome());
+        document.getElementById("lotterySearchName")?.addEventListener("input", ()=>renderLottery());
+        document.getElementById("lotteryClassFilter")?.addEventListener("change", ()=>renderLottery());
         document.getElementById("spinLotteryBtn")?.addEventListener("click", doLottery);
-        document.getElementById("addPrizeBtn")?.addEventListener("click", async () => {
-            if(!checkAdminAndToast("添加奖品")) return;
-            if(lotteryPrizes.length >= 9) { alert("奖品最多9个"); return; }
-            lotteryPrizes.push({ name:"新奖品", points:10, prob:5 });
-            await supabase.from('app_config').upsert({ key: 'lottery_prizes', value: lotteryPrizes }, { onConflict: 'key' });
-            renderLottery();
-            showToast("✅ 已新增奖品");
-        });
-        document.getElementById("savePrizeConfig")?.addEventListener("click", async () => {
-            if(!checkAdminAndToast("保存奖品配置")) return;
-            await supabase.from('app_config').upsert({ key: 'lottery_prizes', value: lotteryPrizes }, { onConflict: 'key' });
-            showToast("💾 奖品配置已保存");
-        });
-        document.getElementById("costPerDraw")?.addEventListener("input", async (e) => {
-            if(!checkAdminAndToast("修改抽奖消耗")) return;
-            let v = parseInt(e.target.value);
-            if(!isNaN(v) && v>=0) { costPerDraw = v; await supabase.from('app_config').upsert({ key: 'cost_per_draw', value: costPerDraw }, { onConflict: 'key' }); }
-        });
-        document.getElementById("searchName")?.addEventListener("input", () => renderHome());
-        document.getElementById("classFilter")?.addEventListener("change", () => renderHome());
-        document.getElementById("lotterySearchName")?.addEventListener("input", () => renderLottery());
-        document.getElementById("lotteryClassFilter")?.addEventListener("change", () => renderLottery());
-        document.getElementById("exportFullBackupBtn")?.addEventListener("click", exportFullBackup);
-        document.getElementById("importFullBackupBtn")?.addEventListener("click", ()=>{ let inp=document.createElement("input"); inp.type="file"; inp.accept=".json"; inp.onchange=e=>{ if(e.target.files[0]) importFullBackup(e.target.files[0]); }; inp.click(); });
-        document.getElementById("exportDataBtn")?.addEventListener("click", exportToCSV);
-        document.getElementById("importDataBtn")?.addEventListener("click", ()=>{ let inp=document.createElement("input"); inp.type="file"; inp.accept=".csv"; inp.onchange=e=>{ if(e.target.files[0]) importFromCSV(e.target.files[0]); }; inp.click(); });
+        document.getElementById("addPrizeBtn")?.addEventListener("click", async () => { if(lotteryPrizes.length<9){ lotteryPrizes.push({ name:"新奖品", points:10, prob:5 }); await supabase.from('app_config').upsert({ key: 'lottery_prizes', value: lotteryPrizes }, { onConflict: 'key' }); renderLottery(); showToast("已新增奖品"); } else alert("最多9个"); });
+        document.getElementById("savePrizeConfig")?.addEventListener("click", async () => { await supabase.from('app_config').upsert({ key: 'lottery_prizes', value: lotteryPrizes }, { onConflict: 'key' }); showToast("奖品配置已保存"); });
+        document.getElementById("costPerDraw")?.addEventListener("input", async (e) => { let v = parseInt(e.target.value); if(!isNaN(v) && v>=0) { costPerDraw = v; await supabase.from('app_config').upsert({ key: 'cost_per_draw', value: costPerDraw }, { onConflict: 'key' }); } });
+        document.getElementById("exportFullBackupBtn")?.addEventListener("click", () => { const backup = { students, lotteryPrizes, costPerDraw, customStages }; const blob = new Blob([JSON.stringify(backup)], {type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`backup_${Date.now()}.json`; a.click(); });
+        document.getElementById("importFullBackupBtn")?.addEventListener("click", ()=>{ let inp=document.createElement("input"); inp.type="file"; inp.accept=".json"; inp.onchange=async e=>{ if(e.target.files[0]){ const text=await e.target.files[0].text(); const data=JSON.parse(text); if(data.students) await supabase.from('students').upsert(data.students); if(data.lotteryPrizes) await supabase.from('app_config').upsert({key:'lottery_prizes', value:data.lotteryPrizes}); if(data.costPerDraw) await supabase.from('app_config').upsert({key:'cost_per_draw', value:data.costPerDraw}); if(data.customStages) await supabase.from('app_config').upsert({key:'custom_stages', value:data.customStages}); showToast("备份恢复完成"); await loadStudents(); await loadConfig(); } }; inp.click(); });
+        document.getElementById("exportDataBtn")?.addEventListener("click", () => { let csv = "姓名,班级,积分,宠物\n"+students.map(s=>`${s.name},${s.class_name},${s.points},${s.pet_id}`).join("\n"); const blob=new Blob(["\uFEFF"+csv],{type:"text/csv"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="students.csv"; a.click(); });
+        document.getElementById("importDataBtn")?.addEventListener("click", ()=>{ let inp=document.createElement("input"); inp.type="file"; inp.accept=".csv"; inp.onchange=async e=>{ if(e.target.files[0]){ const text=await e.target.files[0].text(); const lines=text.split("\n").slice(1); for(let line of lines){ if(line.trim()){ let [name,cls,points,pet]=line.split(","); if(name){ await supabase.from('students').insert({ id:Date.now(), name:name.trim(), class_name:cls?.trim()||"默认", points:parseInt(points)||0, pet_id:pet?.trim()||"egg" }); } } } showToast("导入完成"); await loadStudents(); } }; inp.click(); });
         document.getElementById("clearAllDataBtn")?.addEventListener("click", clearAllData);
         document.getElementById("addClassBtn")?.addEventListener("click", addClass);
         document.getElementById("inlineAddStudentBtn")?.addEventListener("click", inlineAddStudent);
         document.getElementById("saveStagesBtn")?.addEventListener("click", saveStagesConfig);
         document.getElementById("resetStagesBtn")?.addEventListener("click", resetStagesToDefault);
-        document.getElementById("confirmLoginBtn")?.addEventListener("click", () => { login(document.getElementById("loginUsername").value, document.getElementById("loginPassword").value); });
-        document.getElementById("cancelLoginBtn")?.addEventListener("click", hideLoginModal);
+        document.getElementById("confirmLoginBtn")?.addEventListener("click", ()=>{ let u=document.getElementById("loginUsername").value, p=document.getElementById("loginPassword").value; if(u===ADMIN_USERNAME && p===ADMIN_PASSWORD){ isAdmin=true; localStorage.setItem("eggy_admin","true"); document.getElementById("loginOverlay").classList.remove("show"); updateLoginUI(); } else document.getElementById("loginError").innerText="密码错误"; });
+        document.getElementById("cancelLoginBtn")?.addEventListener("click", ()=>document.getElementById("loginOverlay").classList.remove("show"));
         document.getElementById("batchDeleteHistoryBtn")?.addEventListener("click", batchDeleteHistoryRecords);
         document.getElementById("addHistoryRecordBtn")?.addEventListener("click", addHistoryRecord);
-        document.getElementById("refreshHistoryBtn")?.addEventListener("click", async () => { await renderHistoryManagement(); });
-        document.getElementById("cleanHistoryBtn")?.addEventListener("click", async () => { await cleanupOldHistoryOnly(); await renderHistoryManagement(); if (currentPage === 'manage') renderManage(); });
+        document.getElementById("refreshHistoryBtn")?.addEventListener("click", async () => { await renderHistoryManagement(); if(currentPage==='manage') renderManage(); });
+        document.getElementById("cleanHistoryBtn")?.addEventListener("click", async () => { await cleanupOldHistoryOnly(); await renderHistoryManagement(); if(currentPage==='manage') renderManage(); });
         document.getElementById("historySearchStudent")?.addEventListener("input", () => renderHistoryManagement());
+        document.getElementById("closePetSelectorBtn")?.addEventListener("click", ()=>document.getElementById("petSelectorModal").classList.remove("show"));
         
         (async () => {
             checkStoredLogin();
             await loadStudents();
             await loadConfig();
-            subscribeToRealtime();
             bindManageSearch();
             refreshAll();
         })();
