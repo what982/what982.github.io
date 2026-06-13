@@ -33,7 +33,16 @@
         .student-name { font-size: 1.5rem; font-weight: 800; color: #cc7b2e; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
         .class-badge { font-size: 0.75rem; background: #ffdbb5; padding: 4px 12px; border-radius: 40px; color: #a65419; }
         .pet-area { text-align: center; margin: 10px 0; background: #fff2e2; border-radius: 48px; padding: 12px; transition: 0.1s; }
-        .pet-emoji { font-size: 3.8rem; display: inline-block; transition: transform 0.1s; }
+        .pet-emoji {
+    font-size: 4rem;
+    display: inline-block;
+    transition: transform 0.2s ease, filter 0.2s ease;
+    filter: drop-shadow(2px 4px 8px rgba(0,0,0,0.15));
+}
+.pet-card:hover .pet-emoji {
+    transform: scale(1.05);
+    filter: drop-shadow(4px 6px 12px rgba(0,0,0,0.2));
+}
         .pet-rank { font-weight: bold; background: #ffd966; display: inline-block; padding: 4px 14px; border-radius: 40px; font-size: 0.8rem; margin-top: 6px; }
         .progress-bar-bg { background: #ffe0b5; border-radius: 40px; height: 12px; margin: 12px 0; overflow: hidden; }
         .progress-fill { background: #ffaa55; width: 0%; height: 100%; border-radius: 40px; transition: width 0.1s; }
@@ -189,15 +198,21 @@
         let currentSelectingStudentId = null;
         
         // 扩充宠物种类：蛋仔、小猪、小狗、小鸭、小猫、小羊、小兔、小熊
-        const PETS_LIB = [
-    { id: "egg", name: "蛋仔", stages: ["🥚","🐣","🐥","🐤","🐔","⭐🐤","✨🐣","🔥🐥","🌈🐔","👑🐉"] },
-    { id: "pig", name: "小猪", stages: ["🐷","🐽","🐖","🐗","🐷✨","🐽✨","🐖✨","🐗✨","👑🐷","🌈🐷"] },
-    { id: "dog", name: "小狗", stages: ["🐶","🐕","🦴","🐩","🐶✨","🐕✨","🦴✨","🐩✨","👑🐶","🌈🐶"] },
-    { id: "duck", name: "小鸭", stages: ["🦆","🐥","🦢","🌊","🦆✨","🐥✨","🦢✨","🌊✨","👑🦆","🌈🦆"] },
-    { id: "cat", name: "小猫", stages: ["🐱","🐈","🐾","🐱⭐","🐱✨","🐈✨","🐾✨","🐱🔥","👑🐱","🌈🐱"] },
-    { id: "sheep", name: "小羊", stages: ["🐑","🐏","🌿","🐑⭐","🐑✨","🐏✨","🌿✨","🐑🔥","👑🐑","🌈🐑"] },
-    { id: "rabbit", name: "小兔", stages: ["🐇","🐰","🥕","🐇⭐","🐇✨","🐰✨","🥕✨","🐇🔥","👑🐇","🌈🐇"] },
-    { id: "bear", name: "小熊", stages: ["🐻","🐻‍❄️","🍯","🐻⭐","🐻✨","🐻‍❄️✨","🍯✨","🐻🔥","👑🐻","🌈🐻"] }
+   const PETS_LIB = [
+    { id: "egg", name: "蛋仔", stages: ["🥚","🐣","🐥","🐤","🐔","🐔⭐","🐔✨","🐔🔥","🐔🌈","🐔👑"] },
+    { id: "pig", name: "小猪", stages: ["🐖","🐗","🐷","🐽","🐖⭐","🐗✨","🐷🔥","🐽💎","🐖👑","🐗🌈"] },
+    { id: "dog", name: "小狗", stages: ["🐕","🐩","🐕‍🦺","🐶","🐕⭐","🐩✨","🐕‍🦺🔥","🐶💎","🐕👑","🐩🌈"] },
+    { id: "duck", name: "小鸭", stages: ["🦆","🦢","🐥","🦆🌊","🦆⭐","🦢✨","🐥🔥","🦆💎","🦢👑","🦆🌈"] },
+    { id: "cat", name: "小猫", stages: ["🐈","🐈⬛","🐱","🐾","🐈⭐","🐈⬛✨","🐱🔥","🐾💎","🐈👑","🐈⬛🌈"] },
+    { id: "sheep", name: "小羊", stages: ["🐑","🐏","🐑🌿","🐏☁️","🐑⭐","🐏✨","🐑🔥","🐏💎","🐑👑","🐏🌈"] },
+    { id: "rabbit", name: "小兔", stages: ["🐇","🐰","🐇🥕","🐰🌙","🐇⭐","🐰✨","🐇🔥","🐰💎","🐇👑","🐰🌈"] },
+    { id: "bear", name: "小熊", stages: ["🐻","🐻‍❄️","🐻🍯","🐻‍❄️❄️","🐻⭐","🐻‍❄️✨","🐻🔥","🐻‍❄️💎","🐻👑","🐻‍❄️🌈"] },
+    // 新增 5 种宠物
+    { id: "horse", name: "小马", stages: ["🐎","🐴","🐎⭐","🐴✨","🐎🔥","🐴💎","🐎👑","🐴🌈","🐎🌟","🐴✨✨"] },
+    { id: "cow", name: "小牛", stages: ["🐄","🐮","🐄⭐","🐮✨","🐄🔥","🐮💎","🐄👑","🐮🌈","🐄🌟","🐮✨✨"] },
+    { id: "fox", name: "小狐狸", stages: ["🦊","🦊⭐","🦊✨","🦊🔥","🦊💎","🦊👑","🦊🌈","🦊🌟","🦊✨✨","🦊💫"] },
+    { id: "panda", name: "小熊猫", stages: ["🐼","🐼⭐","🐼✨","🐼🔥","🐼💎","🐼👑","🐼🌈","🐼🌟","🐼✨✨","🐼💫"] },
+    { id: "monkey", name: "小猴", stages: ["🐒","🐵","🐒⭐","🐵✨","🐒🔥","🐵💎","🐒👑","🐵🌈","🐒🌟","🐵✨✨"] }
 ];
         
         function getPetById(petId) { return PETS_LIB.find(p => p.id === petId) || PETS_LIB[0]; }
@@ -215,23 +230,21 @@
         function getPetStageName(petId, points) {
     const pet = getPetById(petId);
     let stageIndex = 0;
-    for (let i = customStages.length-1; i>=0; i--) {
-        if (points >= customStages[i].min) { stageIndex = i; break; }
-    }
-    // 获取原始段位名（如“蛋仔萌新”），去掉“蛋仔”前缀得到通用词
-    let rawStageName = customStages[stageIndex]?.name || "萌新";
-    let commonStageName = rawStageName.replace(/蛋仔/g, '').trim();
-    if (commonStageName === "") commonStageName = "萌新";
-    return `${pet.name}·${commonStageName}`;
-}
-            const pet = getPetById(petId);
-            let stageIndex = 0;
-            for (let i = customStages.length-1; i>=0; i--) {
-                if (points >= customStages[i].min) { stageIndex = i; break; }
-            }
-            const baseStage = customStages[stageIndex]?.name || "萌新";
-            return `${pet.name}·${baseStage}`;
+    for (let i = customStages.length - 1; i >= 0; i--) {
+        if (points >= customStages[i].min) {
+            stageIndex = i;
+            break;
         }
+    }
+    // 通用段位后缀（与宠物无关，只反映成长阶段）
+    const commonSuffixes = [
+        "萌新", "初学", "活力", "进阶", "精英",
+        "闪耀", "璀璨", "传奇", "巅峰", "至尊"
+    ];
+    // 如果索引超出范围（比如自定义段位数量变化），回退到“萌新”
+    let suffix = commonSuffixes[stageIndex] || "萌新";
+    return `${pet.name}·${suffix}`;
+}
         
         function showToast(msg) { let d = document.createElement("div"); d.className = "toast-msg"; d.innerText = msg; document.body.appendChild(d); setTimeout(()=>d.remove(),2000); }
         function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
